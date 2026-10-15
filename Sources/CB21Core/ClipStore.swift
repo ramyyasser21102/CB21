@@ -120,6 +120,14 @@ public actor ClipStore {
         return n
     }
 
+    func topContentKey() throws -> String? {
+        var key: String?
+        try query(try handle(), "SELECT content_key FROM clips ORDER BY last_used_at DESC, created_at DESC LIMIT 1") {
+            key = String(cString: sqlite3_column_text($0, 0))
+        }
+        return key
+    }
+
     func secureDeleteSetting() throws -> Int {
         var n = -1
         try query(try handle(), "PRAGMA secure_delete") { n = Int(sqlite3_column_int($0, 0)) }
@@ -170,5 +178,21 @@ public actor ClipStore {
             default: throw StoreError(message: String(cString: sqlite3_errmsg(db)))
             }
         }
+    }
+}
+
+public enum CaptureResult: Sendable, Equatable {
+    case stored
+    case duplicate
+}
+
+extension ClipStore {
+    /// Records a new copy. A copy equal to the Clip at the top of History is a Duplicate and is not stored.
+    public func capture(_ clip: Clip) throws -> CaptureResult {
+        if try topContentKey() == clip.contentKey {
+            return .duplicate
+        }
+        try insert(clip)
+        return .stored
     }
 }
