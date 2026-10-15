@@ -28,7 +28,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 ## Phase 2 — Storage core (`CB21Core`, test-first)
 
-- [ ] 2.1 `feat/clip-model`: `Clip` and `Representation` types, content equality.
+- [x] 2.1 `feat/clip-model`: `Clip` and `Representation` types, content equality.
 - [ ] 2.2 `feat/sqlite-store`: SQLite store open/migrate, insert and list Clips by last used, `secure_delete` on.
 - [ ] 2.3 `feat/duplicate-rule`: a copy equal to the top Clip is not stored; A, B, A stores A twice.
 - [ ] 2.4 `feat/recopy-ordering`: Recopy moves a Clip to the top without adding one.
