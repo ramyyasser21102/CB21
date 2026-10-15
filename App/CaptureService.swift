@@ -9,6 +9,8 @@ final class CaptureService {
 
     let model = HistoryModel()
     let settings = SettingsModel()
+    private let hotKeys = GlobalHotKeys()
+    private var historyHotKeyID: UInt32?
     private(set) var store: ClipStore?
     private(set) var engine: CaptureEngine?
     private(set) var recoveredFrom: URL?
@@ -29,6 +31,43 @@ final class CaptureService {
         Task {
             try? await engine.recopy(id: id)
             await model.refresh(from: store)
+        }
+    }
+
+    /// Binds (or, with nil, clears) the global shortcut that toggles the History window.
+    /// Returns a message to show when the shortcut was refused.
+    func setHistoryShortcut(_ shortcut: Shortcut?) -> String? {
+        if let shortcut {
+            if let problem = ShortcutValidator.validate(shortcut) {
+                return Self.message(for: problem)
+            }
+        }
+        let previous = historyHotKeyID
+        if let previous { hotKeys.unregister(previous) }
+        historyHotKeyID = nil
+        if let shortcut {
+            guard let id = registerHistory(shortcut) else {
+                if let old = settings.values.historyShortcut { historyHotKeyID = registerHistory(old) }
+                return "Another app already uses this shortcut. Choose a different one."
+            }
+            historyHotKeyID = id
+        }
+        settings.update { $0.historyShortcut = shortcut }
+        return nil
+    }
+
+    private func registerHistory(_ shortcut: Shortcut) -> UInt32? {
+        hotKeys.register(shortcut) { [weak self] in
+            guard let self else { return }
+            HistoryWindowController.shared.toggle(service: self)
+        }
+    }
+
+    private static func message(for problem: ShortcutProblem) -> String {
+        switch problem {
+        case .needsModifier: "Include at least one of ⌘, ⌃ or ⌥."
+        case .systemReserved: "macOS or common apps already use this shortcut. Choose a different one."
+        case .alreadyUsed: "cb21 already uses this shortcut for something else."
         }
     }
 
@@ -94,6 +133,9 @@ final class CaptureService {
             let pasteboard = SystemPasteboard()
             let engine = CaptureEngine(pasteboard: pasteboard, store: opened.store)
             self.engine = engine
+            if let saved = settings.values.historyShortcut {
+                historyHotKeyID = registerHistory(saved)
+            }
             let model = self.model
             if opened.recoveredFrom != nil { model.post(.databaseRecovered) }
             task = Task {

@@ -78,7 +78,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
   - Verified automatically: eviction count and trimming are covered by Core tests; app builds and launches.
   - **Manual:** Settings > History: change the two numbers, Apply is enabled only when valid and changed; lowering below the current History shows "Delete N older clips?" (Cancel restores the old numbers); Reset to Defaults gives 100 / 100 MB; values survive quitting and relaunching. With the storage limit at 1 MB, copying a larger image or text should show the "too large" notice in the menu (this also completes the 3.6 check).
 - [x] 5.3 `feat/shortcut-validation`: shortcut rules in Core (modifier required, system shortcuts rejected), tested.
-- [ ] 5.4 `feat/history-shortcut`: shortcut recorder and global binding that toggles the History window. **Manual**
+- [x] 5.4 `feat/history-shortcut`: shortcut recorder and global binding that toggles the History window. **Manual**
+  - Verified automatically: settings persistence tests; a standalone Carbon test confirmed registering the same hotkey twice is refused (the basis of the conflict warning); app builds.
+  - **Manual:** Settings > Shortcuts > "Open history": click, press e.g. Ctrl-Opt-V. It shows as ⌃⌥V and pressing it from any app toggles the History window. Try: no modifier (refused), Cmd-Space (refused), a shortcut another app already uses (refused with a message, old one stays). Reset clears it. The shortcut survives relaunch.
 - [ ] 5.5 `feat/pause-core`: Pause state with 5, 15 minute and until-resumed timers, always cleared at restart (in Core, tested).
 - [ ] 5.6 `feat/pause-ui`: menu item, distinct icon state and Pause shortcut. **Manual**
 

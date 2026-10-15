@@ -4,12 +4,15 @@ import Foundation
 /// so settings saved by an older version still load.
 public struct SettingsValues: Sendable, Equatable, Codable {
     public var limits: Limits = .default
+    /// Opens the History window from any app. Unbound by default.
+    public var historyShortcut: Shortcut?
 
     public init() {}
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         limits = try c.decodeIfPresent(Limits.self, forKey: .limits) ?? .default
+        historyShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .historyShortcut)
     }
 }
 
