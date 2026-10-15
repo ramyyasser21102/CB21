@@ -10,6 +10,8 @@ public struct SettingsValues: Sendable, Equatable, Codable {
     public var pauseShortcut: Shortcut?
     /// Opens the menu bar list itself. Unbound by default.
     public var menuShortcut: Shortcut?
+    /// True once the user has finished or skipped the Welcome window, so it stops opening by itself.
+    public var welcomeCompleted = false
 
     public init() {}
 
@@ -19,6 +21,7 @@ public struct SettingsValues: Sendable, Equatable, Codable {
         historyShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .historyShortcut)
         pauseShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .pauseShortcut)
         menuShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .menuShortcut)
+        welcomeCompleted = try c.decodeIfPresent(Bool.self, forKey: .welcomeCompleted) ?? false
     }
 }
 
