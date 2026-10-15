@@ -81,7 +81,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 5.4 `feat/history-shortcut`: shortcut recorder and global binding that toggles the History window. **Manual**
   - Verified automatically: settings persistence tests; a standalone Carbon test confirmed registering the same hotkey twice is refused (the basis of the conflict warning); app builds.
   - **Manual:** Settings > Shortcuts > "Open history": click, press e.g. Ctrl-Opt-V. It shows as ⌃⌥V and pressing it from any app toggles the History window. Try: no modifier (refused), Cmd-Space (refused), a shortcut another app already uses (refused with a message, old one stays). Reset clears it. The shortcut survives relaunch.
-- [ ] 5.5 `feat/pause-core`: Pause state with 5, 15 minute and until-resumed timers, always cleared at restart (in Core, tested).
+- [x] 5.5 `feat/pause-core`: Pause state with 5, 15 minute and until-resumed timers, always cleared at restart (in Core, tested).
 - [ ] 5.6 `feat/pause-ui`: menu item, distinct icon state and Pause shortcut. **Manual**
 
 ## Phase 6 — Release
