@@ -14,6 +14,8 @@ struct ClipLabel: View {
             Label(url, systemImage: "link")
         case .file(let name):
             Label(name, systemImage: "doc")
+        case .pdf:
+            Label("PDF", systemImage: "doc.richtext")
         case .image:
             if let thumbnail = row.thumbnail {
                 Label { Text("Image") } icon: { Image(nsImage: thumbnail) }

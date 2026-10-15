@@ -4,7 +4,7 @@ import Foundation
 /// One format of a Clip's content.
 public struct Representation: Sendable, Equatable {
     public enum Kind: String, Sendable, CaseIterable {
-        case image, file, link, richText, plainText
+        case image, pdf, file, link, richText, plainText
 
         /// Lower value wins when choosing the preferred Representation.
         fileprivate var priority: Int {
@@ -72,6 +72,8 @@ extension Representation.Kind {
         switch typeIdentifier {
         case "public.png", "public.tiff", "public.jpeg", "public.heic", "com.compuserve.gif":
             .image
+        case "com.adobe.pdf":
+            .pdf
         case "public.file-url":
             .file
         case "public.url":

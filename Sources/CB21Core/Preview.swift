@@ -7,6 +7,8 @@ public enum ClipPreview: Sendable, Equatable {
     case file(String)
     /// The app draws a thumbnail from the Clip's image Representation.
     case image
+    /// PDF data copied from an app. The app draws the first page.
+    case pdf
 
     public static let maxTextLength = 60
 }
@@ -17,6 +19,8 @@ extension Clip {
         switch main.kind {
         case .image:
             return .image
+        case .pdf:
+            return .pdf
         case .file:
             let string = String(decoding: main.data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
             let name = URL(string: string)?.lastPathComponent ?? ""

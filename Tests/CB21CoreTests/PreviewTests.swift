@@ -57,3 +57,17 @@ private func rep(_ kind: Representation.Kind, _ type: String, _ s: String) -> Re
     let clip = Clip(representations: [Representation(kind: .image, typeIdentifier: "public.png", data: Data([1, 2]))])
     #expect(clip.preview == .image)
 }
+
+
+@Test func pdfDataIsAPdfPreview() {
+    let clip = Clip(representations: [rep(.plainText, "public.utf8-plain-text", "page text"), Representation(kind: .pdf, typeIdentifier: "com.adobe.pdf", data: Data([1]))])
+    #expect(clip.preview == .pdf)
+}
+
+@Test func pdfRanksAfterImagesAndBeforeFilesAndText() {
+    let image = Representation(kind: .image, typeIdentifier: "public.png", data: Data([1]))
+    let pdf = Representation(kind: .pdf, typeIdentifier: "com.adobe.pdf", data: Data([2]))
+    let file = rep(.file, "public.file-url", "file:///a.txt")
+    #expect(Clip(representations: [pdf, image]).preferred.kind == .image)
+    #expect(Clip(representations: [file, pdf]).preferred.kind == .pdf)
+}
