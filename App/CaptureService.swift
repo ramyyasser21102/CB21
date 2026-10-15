@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import CB21Core
 
@@ -35,6 +36,24 @@ final class CaptureService {
         guard let store, !ids.isEmpty else { return }
         Task {
             try? await store.delete(ids: Array(ids))
+            await model.refresh(from: store)
+        }
+    }
+
+    /// Asks for confirmation, then permanently deletes the whole History.
+    func confirmAndClearAll() {
+        guard let store, !model.rows.isEmpty else { return }
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Clear all history?"
+        alert.informativeText = "This permanently deletes \(model.rows.count) clips from this Mac. It can't be undone."
+        alert.addButton(withTitle: "Clear All")
+        alert.addButton(withTitle: "Cancel")
+        alert.buttons.first?.hasDestructiveAction = true
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        Task {
+            try? await store.deleteAll()
             await model.refresh(from: store)
         }
     }
