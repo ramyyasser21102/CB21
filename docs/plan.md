@@ -51,7 +51,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [~] 3.5 `feat/pasteboard-access-notice`: first-launch message and System Settings link when access is denied. **Manual**
   - Verified automatically: builds. The denied state needs macOS 15.4 or later (`accessBehavior`), checked with `#available`; the System Settings link opens the general Privacy & Security pane.
   - **Manual:** in System Settings > Privacy & Security > "Paste from Other Apps", set cb21 to Deny (it appears after cb21 first reads the clipboard). The menu should show "cb21 can't read the clipboard" with a working Settings link. Setting it back to Allow should clear the message within a second.
-- [ ] 3.6 `feat/db-notice`: one-time notices for oversized Clips and database recovery in the menu. **Manual**
+- [~] 3.6 `feat/db-notice`: one-time notices for oversized Clips and database recovery in the menu. **Manual**
+  - Verified automatically: real app with a corrupt `history.sqlite` moved it aside and started empty; a 105 MB copy was rejected and stored nothing; a small copy afterwards was stored.
+  - **Manual:** the two menu messages themselves. Put garbage in `~/Library/Application Support/cb21/history.sqlite` (with cb21 quit) and launch: the menu shows "History was damaged and has been reset" with Dismiss. The oversized message appears once Settings can lower the storage Limit (step 5.2); check it then.
 
 ## Phase 4 — History window and deletion
 

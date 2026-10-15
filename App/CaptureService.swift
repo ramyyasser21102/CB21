@@ -45,13 +45,19 @@ final class CaptureService {
             let engine = CaptureEngine(pasteboard: pasteboard, store: opened.store)
             self.engine = engine
             let model = self.model
+            if opened.recoveredFrom != nil { model.post(.databaseRecovered) }
             task = Task {
                 _ = try? await opened.store.sweepOrphanedImageFiles()
                 await model.refresh(from: opened.store)
                 while !Task.isCancelled {
                     model.setPasteboardAccessDenied(pasteboard.isAccessDenied)
-                    if case .captured = try? await engine.poll() {
+                    switch try? await engine.poll() {
+                    case .captured(.rejectedTooLarge):
+                        model.post(.clipTooLarge)
+                    case .captured:
                         await model.refresh(from: opened.store)
+                    default:
+                        break
                     }
                     try? await Task.sleep(for: .milliseconds(500))
                 }
