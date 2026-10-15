@@ -37,3 +37,6 @@ AuthKey_*.p8
 # Local tooling
 .scratch/
 .claude/settings.local.json
+
+# XcodeGen output
+*.xcodeproj/
