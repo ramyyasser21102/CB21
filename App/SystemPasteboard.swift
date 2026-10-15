@@ -7,6 +7,14 @@ final class SystemPasteboard: PasteboardReading, @unchecked Sendable {
 
     var changeCount: Int { pasteboard.changeCount }
 
+    /// True when the user has set "Paste from Other Apps" to deny for cb21 (macOS 15.4 and later).
+    var isAccessDenied: Bool {
+        if #available(macOS 15.4, *) {
+            return pasteboard.accessBehavior == .alwaysDeny
+        }
+        return false
+    }
+
     func snapshot() -> PasteboardSnapshot {
         let types = pasteboard.pasteboardItems?.first?.types ?? []
         let markers = Set(types.map(\.rawValue)).intersection([

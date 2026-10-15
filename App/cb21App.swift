@@ -21,6 +21,15 @@ struct MenuContent: View {
     let recopy: (UUID) -> Void
 
     var body: some View {
+        if model.pasteboardAccessDenied {
+            Text("cb21 can't read the clipboard").disabled(true)
+            Button("Allow in System Settings…") {
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+            Divider()
+        }
         if model.rows.isEmpty {
             Text("No clips yet").disabled(true)
         } else {

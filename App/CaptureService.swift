@@ -41,13 +41,15 @@ final class CaptureService {
             )
             store = opened.store
             recoveredFrom = opened.recoveredFrom
-            let engine = CaptureEngine(pasteboard: SystemPasteboard(), store: opened.store)
+            let pasteboard = SystemPasteboard()
+            let engine = CaptureEngine(pasteboard: pasteboard, store: opened.store)
             self.engine = engine
             let model = self.model
             task = Task {
                 _ = try? await opened.store.sweepOrphanedImageFiles()
                 await model.refresh(from: opened.store)
                 while !Task.isCancelled {
+                    model.setPasteboardAccessDenied(pasteboard.isAccessDenied)
                     if case .captured = try? await engine.poll() {
                         await model.refresh(from: opened.store)
                     }

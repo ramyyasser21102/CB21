@@ -15,6 +15,11 @@ final class HistoryModel {
     static let menuLimit = 10
 
     private(set) var rows: [Row] = []
+    private(set) var pasteboardAccessDenied = false
+
+    func setPasteboardAccessDenied(_ denied: Bool) {
+        if pasteboardAccessDenied != denied { pasteboardAccessDenied = denied }
+    }
 
     func refresh(from store: ClipStore) async {
         guard let clips = try? await store.list() else { return }
