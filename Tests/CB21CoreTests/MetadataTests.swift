@@ -152,3 +152,26 @@ private func tempDir() throws -> URL {
     let meta = clip(.link, "public.url", Data("mailto:me@example.com".utf8)).metadata()
     #expect(meta.detail == .link(LinkFacts(url: "mailto:me@example.com", host: nil)))
 }
+
+// MARK: Display text (Detail pane)
+
+@Test func shortTextIsShownInFull() {
+    let shown = plain("short text").displayText()
+    #expect(shown == DisplayText(text: "short text", isTruncated: false))
+}
+
+@Test func textLongerThanTheLimitIsCutAndFlagged() {
+    let long = String(repeating: "ab", count: 6_000) // 12,000 characters
+    let shown = try! #require(plain(long).displayText())
+    #expect(shown.text.count == 10_000)
+    #expect(shown.isTruncated)
+}
+
+@Test func textExactlyAtTheLimitIsNotFlagged() {
+    let exact = String(repeating: "x", count: 10_000)
+    #expect(plain(exact).displayText()?.isTruncated == false)
+}
+
+@Test func clipWithoutPlainTextHasNoDisplayText() {
+    #expect(clip(.link, "public.url", Data("https://a.b".utf8)).displayText() == nil)
+}

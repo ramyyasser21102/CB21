@@ -78,7 +78,26 @@ public struct ClipMetadata: Sendable, Equatable {
     public let detail: Detail
 }
 
+/// Text for the Detail pane, cut to a length the window can show comfortably.
+public struct DisplayText: Sendable, Equatable {
+    public static let defaultLimit = 10_000
+
+    public let text: String
+    public let isTruncated: Bool
+
+    public init(text: String, isTruncated: Bool) {
+        self.text = text
+        self.isTruncated = isTruncated
+    }
+}
+
 extension Clip {
+    public func displayText(limit: Int = DisplayText.defaultLimit) -> DisplayText? {
+        guard let full = fullText else { return nil }
+        guard full.count > limit else { return DisplayText(text: full, isTruncated: false) }
+        return DisplayText(text: String(full.prefix(limit)), isTruncated: true)
+    }
+
     /// The Clip's plain text in full, when it has any.
     public var fullText: String? {
         representations.first { $0.kind == .plainText }.map { String(decoding: $0.data, as: UTF8.self) }

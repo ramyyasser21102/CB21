@@ -18,14 +18,16 @@ final class HistoryWindowController {
                     HistoryWindowController.shared.hide()
                 },
                 delete: { service.delete(ids: $0) },
-                clearAll: { service.confirmAndClearAll() }
+                clearAll: { service.confirmAndClearAll() },
+                loadClip: { await service.clip(id: $0) }
             ))
             let window = NSWindow(contentViewController: hosting)
             window.title = "cb21 History"
             window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
             window.level = .floating
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 420, height: 520))
+            window.setContentSize(NSSize(width: 800, height: 540))
+            window.contentMinSize = NSSize(width: 640, height: 360)
             window.center()
             self.window = window
         }
@@ -54,6 +56,7 @@ struct HistoryView: View {
     let copy: (UUID) -> Void
     let delete: (Set<UUID>) -> Void
     let clearAll: () -> Void
+    let loadClip: (UUID) async -> Clip?
     @State private var selection = Set<UUID>()
 
     var body: some View {
@@ -61,6 +64,7 @@ struct HistoryView: View {
             ContentUnavailableView("No clips yet", systemImage: "doc.on.clipboard",
                                    description: Text("Things you copy will show up here."))
         } else {
+            HSplitView {
             List(model.rows, selection: $selection) { row in
                 HStack {
                     Image(systemName: "circle.fill")
@@ -127,6 +131,10 @@ struct HistoryView: View {
                     .padding(8)
                     .background(.bar)
                 }
+            }
+            .frame(minWidth: 300, idealWidth: 360)
+            DetailPane(selection: selection, load: loadClip)
+                .frame(minWidth: 280, idealWidth: 440)
             }
         }
     }
