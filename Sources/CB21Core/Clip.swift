@@ -61,3 +61,23 @@ public struct Clip: Sendable, Equatable, Identifiable {
         representations.reduce(0) { $0 + $1.data.count }
     }
 }
+
+extension Representation.Kind {
+    /// Maps a pasteboard type identifier to a Kind. Types cb21 doesn't keep return nil.
+    public static func classify(_ typeIdentifier: String) -> Representation.Kind? {
+        switch typeIdentifier {
+        case "public.png", "public.tiff", "public.jpeg", "public.heic", "com.compuserve.gif":
+            .image
+        case "public.file-url":
+            .file
+        case "public.url":
+            .link
+        case "public.rtf", "public.html", "com.apple.flat-rtfd", "com.apple.webarchive":
+            .richText
+        case "public.utf8-plain-text", "public.utf16-plain-text", "NSStringPboardType":
+            .plainText
+        default:
+            nil
+        }
+    }
+}
