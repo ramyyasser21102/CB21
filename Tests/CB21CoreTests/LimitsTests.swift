@@ -69,3 +69,18 @@ private func sized(_ name: String, bytes: Int, at time: TimeInterval) -> Clip {
     _ = try await store.capture(two)
     #expect(try FileManager.default.contentsOfDirectory(atPath: images.path).count == 1)
 }
+
+@Test func clipLargerThanTheStorageLimitIsRejectedAndNothingIsEvicted() async throws {
+    let store = try ClipStore.inMemory(limits: Limits(maxItems: 100, maxBytes: 20))
+    let small = sized("s", bytes: 4, at: 1)
+    _ = try await store.capture(small)
+    let big = sized("big", bytes: 50, at: 2)
+    #expect(try await store.capture(big) == .rejectedTooLarge)
+    #expect(try await store.list().map(\.id) == [small.id])
+}
+
+@Test func clipExactlyAtTheStorageLimitIsStored() async throws {
+    let store = try ClipStore.inMemory(limits: Limits(maxItems: 100, maxBytes: 10))
+    let exact = Clip(representations: [Representation(kind: .plainText, typeIdentifier: "public.utf8-plain-text", data: Data(repeating: 1, count: 10))])
+    #expect(try await store.capture(exact) == .stored)
+}

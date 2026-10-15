@@ -284,6 +284,8 @@ public struct Limits: Sendable, Equatable {
 public enum CaptureResult: Sendable, Equatable {
     case stored
     case duplicate
+    /// Larger than the whole storage Limit. Nothing is stored or evicted.
+    case rejectedTooLarge
 }
 
 extension ClipStore {
@@ -297,6 +299,9 @@ extension ClipStore {
 
     /// Records a new copy. A copy equal to the Clip at the top of History is a Duplicate and is not stored.
     public func capture(_ clip: Clip) throws -> CaptureResult {
+        if clip.byteCount > limits.maxBytes {
+            return .rejectedTooLarge
+        }
         if try topContentKey() == clip.contentKey {
             return .duplicate
         }
