@@ -117,6 +117,19 @@ Each step is one branch. **Manual** marks what only the user can verify.
   - Verified automatically: `scripts/build-release.sh` builds a universal (arm64 + x86_64) Release app, ad-hoc signs it, zips it to `dist/cb21-1.0.0.zip` with a SHA-256 file; a fresh unzip launches and captures a copy. `spctl` rejects it, as expected without notarization.
   - **Manual:** on a clean download (or after `xattr -w com.apple.quarantine "0081;00000000;Safari;" cb21.app`), follow the README: first launch is blocked, Open Anyway works, the icon appears. Then publish the zip as a GitHub Release (not done: it is outward-facing).
 
+## Phase 7 — Inspect clips (CB-7)
+
+Order: the stored facts first (7.1–7.3), then the logic in Core (7.4), then the screens (7.5–7.7).
+
+- [ ] 7.1 `feat/schema-migration`: versioned database migrations (`user_version`); the first one adds `source_app_name` to `clips` without touching existing rows. Tested against a database created with the old schema.
+- [ ] 7.2 `feat/source-app`: `Clip` and `PasteboardSnapshot` carry an optional Source app; the real pasteboard fills it from the frontmost app at capture time (it can lag the copy by up to the 0.5 s poll interval); the store saves and lists it. Core tests with the fake pasteboard.
+- [ ] 7.3 `feat/pdf-representation`: new `pdf` Representation kind for raw PDF data (`com.adobe.pdf`), ranked after images; previews and the menu show it as a PDF. Core tests.
+- [ ] 7.4 `feat/clip-metadata`: `ClipMetadata` in Core: all-Clip facts, text counts, image size and format (ImageIO), PDF pages and title (PDFKit), file facts and existence, link host. Tests with generated PNG and PDF fixtures and temp files.
+- [ ] 7.5 `feat/row-subtitle`: History rows show a subtitle with relative time, size and Source app. **Manual**
+- [ ] 7.6 `feat/detail-pane`: History window gets a Detail pane for a single selected Clip, with a hint for none or several; text view with counts and the 10,000-character cap, links, file facts. **Manual**
+- [ ] 7.7 `feat/image-pdf-preview`: scaled image, first PDF page and Quick Look file thumbnails, generated off the main thread and cached, with a "File no longer exists" state. **Manual**
+- [ ] 7.8 `docs/readme-source-app`: README privacy section mentions the locally stored Source app and the new Detail pane.
+
 ## Hand-back note
 
 When a step stops for the user, write this under the step: what was built and the branch; what was verified automatically; what was not, with exact steps to try and what to look for; what was tried and where it stopped; which later steps are independent.

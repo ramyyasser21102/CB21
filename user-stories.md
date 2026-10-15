@@ -77,6 +77,20 @@ As a user, I want to pause capture, so I can copy sensitive data that cb21 would
 - Settings has an optional Pause shortcut, unbound by default, with the same conflict rules as CB-3.
 - Recopy and deletion work normally while paused.
 
+### CB-7: Inspect a clip
+
+As a user, I want to see what a clip really is, so I can tell similar clips apart and find the one I need.
+
+- Each History row has a one-line subtitle: when it was copied, its size, and the Source app when known.
+- Selecting one Clip shows the Detail pane beside the list; no selection or several selected shows a hint instead.
+- Text: the full text, scrollable and selectable, with character, word and line counts. Very long text shows the first 10,000 characters with a note.
+- Images: the image scaled to fit, with pixel size, format and file size.
+- PDFs: a first-page preview, page count, title when the file has one, and size. Both PDF files copied in Finder and PDF data copied from an app are captured.
+- Files: name, kind, size, modified date and folder, a Quick Look preview, and "File no longer exists" when it has moved or gone (saved Metadata stays).
+- Links: host and full URL. cb21 makes no network connections, so no page titles.
+- The menu bar list is unchanged.
+- Previews and Metadata are worked out on demand off the main thread, so a large image or PDF doesn't freeze the window. The Source app is recorded locally only.
+
 ## Settings
 
 A single pane with three sections:
@@ -97,6 +111,7 @@ A single pane with three sections:
 | --- | --- |
 | Cloud/iCloud sync | Adds privacy risk and a backend, which conflicts with "free" |
 | Search and pinning | Useful, but not in the feature list; easy to add as v1.1 |
+| Zoom, editing, syntax highlighting and search inside the Detail pane | Not needed to tell clips apart; candidates for later |
 | Paste as plain text | Recopy writes all Representations in v1; a plain-text option is a v1.1 candidate |
 | Snippets/text expansion | Different product category |
 | Per-app ignore list | Beyond the concealed-type check and Pause, this is extra scope |
