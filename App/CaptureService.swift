@@ -6,6 +6,7 @@ import CB21Core
 final class CaptureService {
     static let shared = CaptureService()
 
+    let model = HistoryModel()
     private(set) var store: ClipStore?
     private(set) var engine: CaptureEngine?
     private(set) var recoveredFrom: URL?
@@ -18,6 +19,15 @@ final class CaptureService {
         }
         return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("cb21", isDirectory: true)
+    }
+
+    /// Puts a Clip back on the pasteboard. It moves to the top and is not captured again.
+    func recopy(id: UUID) {
+        guard let engine, let store else { return }
+        Task {
+            try? await engine.recopy(id: id)
+            await model.refresh(from: store)
+        }
     }
 
     func start() {
@@ -33,10 +43,14 @@ final class CaptureService {
             recoveredFrom = opened.recoveredFrom
             let engine = CaptureEngine(pasteboard: SystemPasteboard(), store: opened.store)
             self.engine = engine
+            let model = self.model
             task = Task {
                 _ = try? await opened.store.sweepOrphanedImageFiles()
+                await model.refresh(from: opened.store)
                 while !Task.isCancelled {
-                    _ = try? await engine.poll()
+                    if case .captured = try? await engine.poll() {
+                        await model.refresh(from: opened.store)
+                    }
                     try? await Task.sleep(for: .milliseconds(500))
                 }
             }
