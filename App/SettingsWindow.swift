@@ -26,6 +26,8 @@ struct SettingsView: View {
     let service: CaptureService
     private var settings: SettingsModel { service.settings }
 
+    @State private var launchStatus = LaunchAtLogin.status
+    @State private var launchError: String?
     @State private var maxItems: Int
     @State private var maxMegabytes: Int
 
@@ -84,11 +86,25 @@ struct SettingsView: View {
                 Text("When either limit is reached, the least recently used clips are deleted first.")
             }
             Section("General") {
-                Text("Nothing to configure yet").foregroundStyle(.secondary)
+                Toggle("Launch at login", isOn: Binding(
+                    get: { launchStatus != .off },
+                    set: { enabled in
+                        launchError = LaunchAtLogin.set(enabled)
+                        launchStatus = LaunchAtLogin.status
+                    }
+                ))
+                if launchStatus == .needsApproval {
+                    Text("Allow cb21 in System Settings > General > Login Items.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                if let launchError {
+                    Text(launchError).font(.caption).foregroundStyle(.red)
+                }
             }
         }
         .formStyle(.grouped)
-        .frame(width: 440, height: 380)
+        .onAppear { launchStatus = LaunchAtLogin.status }
+        .frame(width: 440, height: 460)
     }
 
     private func apply() async {

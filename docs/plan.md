@@ -105,7 +105,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 ## Phase 6 — Release
 
-- [ ] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**
+- [x] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**
+  - Verified automatically: builds. Not exercised, because registering would add a login item to your Mac from a build folder.
+  - **Manual:** Settings > General > "Launch at login" is off by default. Turn it on: it should appear in System Settings > General > Login Items (an unsigned build may need approval there, and the app says so). Log out and in to confirm cb21 starts. Turn it off and confirm it is removed.
 - [x] 6.2 `feat/app-icon`: app icon from `CB21.png` (menu bar sprites are done in S3). Done with S3 (AppIcon in the catalog; verified in the built bundle).
 - [ ] 6.3 `docs/readme`: README with install steps, the Gatekeeper instructions and the privacy statement.
 - [ ] 6.4 `feat/release-build`: script that builds the ad-hoc signed zip for GitHub Releases. **Manual:** open the zip on a clean download.
