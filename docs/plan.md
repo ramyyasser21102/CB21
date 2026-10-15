@@ -16,7 +16,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 ## Standalone steps
 
 - [x] S1 `chore/xcodegen`: install XcodeGen with Homebrew and add `scripts/check.sh` (runs `swift test` and `xcodebuild`).
-- [ ] S2 `chore/ci`: GitHub Actions workflow on a macOS runner running `scripts/check.sh` on push and pull request.
+- [x] S2 `chore/ci`: GitHub Actions workflow on a macOS runner running `scripts/check.sh` on push and pull request.
 
 ## Phase 1 — Foundation
 
