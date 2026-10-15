@@ -16,7 +16,7 @@ struct CB21App: App {
                 recopy: { id in service.recopy(id: id) },
                 openHistory: { HistoryWindowController.shared.show(service: service) },
                 clearAll: { service.confirmAndClearAll() },
-                openSettings: { SettingsWindowController.shared.show(settings: service.settings, applyLimits: { await service.applyLimits($0) }) }
+                openSettings: { SettingsWindowController.shared.show(service: service) }
             )
         }
     }

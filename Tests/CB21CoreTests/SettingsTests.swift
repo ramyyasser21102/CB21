@@ -28,3 +28,20 @@ private func freshDefaults() -> UserDefaults {
     defaults.set(Data("not json".utf8), forKey: SettingsPersistence.key)
     #expect(SettingsPersistence(defaults: defaults).load() == SettingsValues())
 }
+
+@Test func historyShortcutIsUnboundByDefaultAndPersists() {
+    #expect(SettingsValues().historyShortcut == nil)
+    let defaults = freshDefaults()
+    var values = SettingsValues()
+    values.historyShortcut = Shortcut(keyCode: 9, modifiers: [.command, .shift])
+    SettingsPersistence(defaults: defaults).save(values)
+    #expect(SettingsPersistence(defaults: defaults).load().historyShortcut == values.historyShortcut)
+}
+
+@Test func settingsSavedBeforeShortcutsExistedStillLoad() {
+    let defaults = freshDefaults()
+    defaults.set(Data(#"{"limits":{"maxItems":10,"maxBytes":2048}}"#.utf8), forKey: SettingsPersistence.key)
+    let loaded = SettingsPersistence(defaults: defaults).load()
+    #expect(loaded.limits == Limits(maxItems: 10, maxBytes: 2048))
+    #expect(loaded.historyShortcut == nil)
+}

@@ -7,12 +7,10 @@ final class SettingsWindowController {
     static let shared = SettingsWindowController()
 
     private var window: NSWindow?
-    private var applyLimits: ((Limits) async -> Bool)?
 
-    func show(settings: SettingsModel, applyLimits: @escaping (Limits) async -> Bool) {
-        self.applyLimits = applyLimits
+    func show(service: CaptureService) {
         if window == nil {
-            let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(settings: settings, applyLimits: { await self.applyLimits?($0) ?? false })))
+            let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(service: service)))
             window.title = "cb21 Settings"
             window.styleMask = [.titled, .closable]
             window.isReleasedWhenClosed = false
@@ -25,19 +23,19 @@ final class SettingsWindowController {
 }
 
 struct SettingsView: View {
-    let settings: SettingsModel
-    let applyLimits: (Limits) async -> Bool
+    let service: CaptureService
+    private var settings: SettingsModel { service.settings }
 
     @State private var maxItems: Int
     @State private var maxMegabytes: Int
 
     private static let bytesPerMegabyte = 1024 * 1024
 
-    init(settings: SettingsModel, applyLimits: @escaping (Limits) async -> Bool) {
-        self.settings = settings
-        self.applyLimits = applyLimits
-        _maxItems = State(initialValue: settings.values.limits.maxItems)
-        _maxMegabytes = State(initialValue: settings.values.limits.maxBytes / Self.bytesPerMegabyte)
+    init(service: CaptureService) {
+        self.service = service
+        let limits = service.settings.values.limits
+        _maxItems = State(initialValue: limits.maxItems)
+        _maxMegabytes = State(initialValue: limits.maxBytes / Self.bytesPerMegabyte)
     }
 
     private var draft: Limits {
@@ -50,7 +48,11 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Shortcuts") {
-                Text("No shortcuts set").foregroundStyle(.secondary)
+                ShortcutRecorder(
+                    title: "Open history",
+                    shortcut: settings.values.historyShortcut,
+                    onChange: { service.setHistoryShortcut($0) }
+                )
             }
             Section {
                 TextField("Keep at most (clips)", value: $maxItems, format: .number)
@@ -80,7 +82,7 @@ struct SettingsView: View {
     }
 
     private func apply() async {
-        if await applyLimits(draft) { return }
+        if await service.applyLimits(draft) { return }
         // Cancelled: show what is actually in effect.
         maxItems = settings.values.limits.maxItems
         maxMegabytes = settings.values.limits.maxBytes / Self.bytesPerMegabyte
