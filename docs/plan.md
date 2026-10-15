@@ -33,7 +33,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 2.3 `feat/duplicate-rule`: a copy equal to the top Clip is not stored; A, B, A stores A twice.
 - [x] 2.4 `feat/recopy-ordering`: Recopy moves a Clip to the top without adding one.
 - [x] 2.5 `feat/image-files`: image bytes saved as files beside the database, metadata in SQLite (preview thumbnails come with 3.3).
-- [ ] 2.6 `feat/delete-clips`: delete one, several or all Clips, removing rows and image files.
+- [x] 2.6 `feat/delete-clips`: delete one, several or all Clips, removing rows and image files.
 - [ ] 2.7 `feat/limits-eviction`: item and storage Limits, least recently used evicted first, lowering a Limit trims.
 - [ ] 2.8 `feat/oversized-clip`: a Clip larger than the storage Limit is rejected with a reason.
 - [ ] 2.9 `feat/orphan-sweep`: startup removes image files with no row.

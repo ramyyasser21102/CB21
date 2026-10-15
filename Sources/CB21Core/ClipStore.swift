@@ -108,6 +108,45 @@ public actor ClipStore {
         }
     }
 
+    /// Permanently deletes Clips, including their image files. Unknown ids are ignored.
+    public func delete(ids: [UUID]) throws {
+        let db = try handle()
+        try Self.execute(db, "BEGIN")
+        var files: [String] = []
+        do {
+            for id in ids {
+                try query(db, "SELECT file_name FROM representations WHERE clip_id = ? AND file_name IS NOT NULL",
+                          bind: { sqlite3_bind_text($0, 1, id.uuidString, -1, sqliteTransient) }) {
+                    files.append(String(cString: sqlite3_column_text($0, 0)))
+                }
+                try run(db, "DELETE FROM clips WHERE id = ?") { sqlite3_bind_text($0, 1, id.uuidString, -1, sqliteTransient) }
+            }
+            try Self.execute(db, "COMMIT")
+        } catch {
+            try? Self.execute(db, "ROLLBACK")
+            throw error
+        }
+        removeImageFiles(files)
+    }
+
+    /// Permanently deletes every Clip (Clear all).
+    public func deleteAll() throws {
+        let db = try handle()
+        var files: [String] = []
+        try query(db, "SELECT file_name FROM representations WHERE file_name IS NOT NULL") {
+            files.append(String(cString: sqlite3_column_text($0, 0)))
+        }
+        try Self.execute(db, "DELETE FROM clips")
+        removeImageFiles(files)
+    }
+
+    private func removeImageFiles(_ names: [String]) {
+        guard let imagesDirectory else { return }
+        for name in names {
+            try? FileManager.default.removeItem(at: imagesDirectory.appendingPathComponent(name))
+        }
+    }
+
     /// Moves an existing Clip to the top of History. It is not captured again.
     public func recopy(id: UUID, at date: Date = Date()) throws {
         let db = try handle()
