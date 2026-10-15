@@ -54,3 +54,27 @@ func textClip(_ s: String, at time: TimeInterval = 0) -> Clip {
     let store = try ClipStore.inMemory()
     #expect(try await store.secureDeleteSetting() == 1)
 }
+
+@Test func copyEqualToTheTopClipIsADuplicateAndNotStored() async throws {
+    let store = try ClipStore.inMemory()
+    #expect(try await store.capture(textClip("A", at: 1)) == .stored)
+    #expect(try await store.capture(textClip("A", at: 2)) == .duplicate)
+    #expect(try await store.count() == 1)
+}
+
+@Test func copyingABAStoresAAgainBecauseOnlyConsecutiveDuplicatesCollapse() async throws {
+    let store = try ClipStore.inMemory()
+    _ = try await store.capture(textClip("A", at: 1))
+    _ = try await store.capture(textClip("B", at: 2))
+    #expect(try await store.capture(textClip("A", at: 3)) == .stored)
+    let texts = try await store.list().map { String(decoding: $0.preferred.data, as: UTF8.self) }
+    #expect(texts == ["A", "B", "A"])
+}
+
+@Test func duplicateIsComparedAgainstTheMostRecentlyUsedClip() async throws {
+    let store = try ClipStore.inMemory()
+    _ = try await store.capture(textClip("A", at: 1))
+    _ = try await store.capture(textClip("B", at: 2))
+    #expect(try await store.capture(textClip("B", at: 3)) == .duplicate)
+    #expect(try await store.count() == 2)
+}
