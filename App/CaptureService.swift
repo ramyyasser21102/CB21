@@ -150,6 +150,7 @@ final class CaptureService {
     func delete(ids: Set<UUID>) {
         guard let store, !ids.isEmpty else { return }
         Task {
+            for id in ids { await PreviewCache.shared.forget(id) }
             try? await store.delete(ids: Array(ids))
             await model.refresh(from: store)
         }

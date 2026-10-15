@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import CB21Core
 
@@ -29,7 +30,11 @@ private struct ClipDetail: View {
     let id: UUID
     let load: (UUID) async -> Clip?
     @State private var loaded: Loaded?
+    @State private var preview: NSImage?
+    @State private var previewState = PreviewState.none
     @State private var missing = false
+
+    private enum PreviewState { case none, loading, ready, unavailable }
 
     var body: some View {
         Group {
@@ -44,11 +49,21 @@ private struct ClipDetail: View {
         // Reading and decoding happens off the main thread, so a big image or PDF can't freeze the window.
         .task(id: id) {
             missing = false
+            preview = nil
+            previewState = .none
             guard let clip = await load(id) else { missing = true; return }
             let result = await Task.detached(priority: .userInitiated) {
                 Loaded(id: id, displayText: clip.displayText(), metadata: clip.metadata())
             }.value
             loaded = result
+            // The facts show first; the picture fills in when it is ready.
+            if clip.hasPicture {
+                previewState = .loading
+                let image = await PreviewCache.shared.image(for: clip)
+                guard !Task.isCancelled else { return }
+                preview = image
+                previewState = image == nil ? .unavailable : .ready
+            }
         }
     }
 
@@ -64,12 +79,34 @@ private struct ClipDetail: View {
                         Text(facts.url).textSelection(.enabled)
                     }
                 case .image, .pdf, .file:
-                    EmptyView() // previews arrive in the next step; the facts below still show
+                    picture
                 }
                 facts(item.metadata)
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private var picture: some View {
+        switch previewState {
+        case .ready:
+            if let preview {
+                Image(nsImage: preview)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity, maxHeight: 360)
+                    .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 6))
+                    .accessibilityLabel("Preview")
+            }
+        case .loading:
+            ProgressView().frame(maxWidth: .infinity, minHeight: 120)
+        case .unavailable:
+            Label("No preview available", systemImage: "eye.slash")
+                .font(.callout).foregroundStyle(.secondary)
+        case .none:
+            EmptyView()
         }
     }
 
@@ -154,6 +191,17 @@ private struct LabeledBlock<Content: View>: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.caption).foregroundStyle(.secondary)
             content
+        }
+    }
+}
+
+
+private extension Clip {
+    /// Images, PDFs and files can show a picture; text and links can't.
+    var hasPicture: Bool {
+        switch preferred.kind {
+        case .image, .pdf, .file: true
+        case .link, .richText, .plainText: false
         }
     }
 }
