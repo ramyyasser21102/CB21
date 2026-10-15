@@ -251,6 +251,10 @@ public actor ClipStore {
         }
     }
 
+    public func clip(id: UUID) throws -> Clip? {
+        try list().first { $0.id == id }
+    }
+
     public func count() throws -> Int {
         var n = 0
         try query(try handle(), "SELECT COUNT(*) FROM clips") { n = Int(sqlite3_column_int64($0, 0)) }
