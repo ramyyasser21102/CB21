@@ -90,7 +90,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 - [x] S3 `chore/assets`: move and convert the provided artwork: menu bar sprites (`Default.svg`, `Paused.svg`), app icon and README image (`CB21.png`).
   - Sources live in `design/` (menu bar SVGs) and `docs/assets/cb21.png` (README image and icon source). `swift scripts/make-assets.swift` regenerates the asset catalog: black template menu bar images at 18 pt (1x-3x) and the app icon on the 1024 grid. Note `cb21.png` is 828x825, not square, so it is scaled to fit; a 1024x1024 export would be crisper for the large icon sizes.
-- [ ] 5.7 `feat/status-item-menu`: replace SwiftUI `MenuBarExtra` with an `NSStatusItem` and `NSMenu` so the menu can be opened from code; use the sprites, swapping on Pause. **Manual**
+- [x] 5.7 `feat/status-item-menu`: replace SwiftUI `MenuBarExtra` with an `NSStatusItem` and `NSMenu` so the menu can be opened from code; use the sprites, swapping on Pause. **Manual**
+  - Verified automatically: builds, launches, capture still works through the new service start; screenshots and accessibility are not permitted for the agent, so the icon and menu are unseen.
+  - **Manual:** the menu bar shows the new clipboard sprite (Default); the menu has the same items as before, rebuilt fresh on every open; image clips show a thumbnail, links and files an icon. Pausing swaps the icon to the Paused sprite and back on resume. Light and dark menu bar both look right (template image).
 - [ ] 5.8 `feat/menu-shortcut`: optional global shortcut that opens the menu bar list itself; same validation and conflict rules as the other shortcuts. **Manual**
 - [ ] 5.9 `feat/history-copy-button`: a Copy button beside Delete in the History window: Recopy (the Clip becomes the most recent and goes on the pasteboard) and close the window. **Manual**
 - [ ] 5.10 `feat/latest-clip-dot`: a dot marks the most recently used Clip in the History window. **Manual**

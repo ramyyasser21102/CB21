@@ -23,8 +23,13 @@ final class HistoryModel {
     private(set) var pasteboardAccessDenied = false
     private(set) var isPaused = false
 
+    /// Called when Pause starts or ends, so the menu bar icon can change.
+    var onPausedChange: ((Bool) -> Void)?
+
     func setPaused(_ paused: Bool) {
-        if isPaused != paused { isPaused = paused }
+        guard isPaused != paused else { return }
+        isPaused = paused
+        onPausedChange?(paused)
     }
 
     /// One-time messages shown at the top of the menu until dismissed.
