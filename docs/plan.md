@@ -105,6 +105,8 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 - [x] S4 `fix/menu-latest-dot`: the most recent Clip is also marked with a dot in the menu bar list (5.10 only covered the History window). **Manual:** open the menu: a dot sits left of the top clip only.
 
+- [x] S5 `fix/double-close-on-failed-open`: opening a corrupt database closed the connection twice (once in `init`'s failure path, once in `deinit`), a use-after-free that crashed parallel test runs about 1 time in 20 and could affect the app's corrupt-History recovery. Found from the macOS crash reports; fixed by clearing the pointer; 0 failures in 200 parallel runs afterwards.
+
 ## Phase 6 — Release
 
 - [x] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**

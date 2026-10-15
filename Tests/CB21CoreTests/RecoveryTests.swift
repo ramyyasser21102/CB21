@@ -44,3 +44,15 @@ private func tempDir() throws -> URL {
     try await opened.store.insert(textClip("works again"))
     #expect(try await opened.store.count() == 1)
 }
+
+
+@Test func openingAnUnreadableDatabaseManyTimesFailsCleanlyEachTime() throws {
+    let dir = try tempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let url = dir.appendingPathComponent("history.sqlite")
+    try Data("not a database".utf8).write(to: url)
+    // A failed open must close its connection exactly once; a double close crashes intermittently.
+    for _ in 0..<200 {
+        #expect(throws: (any Error).self) { _ = try ClipStore(path: url.path) }
+    }
+}
