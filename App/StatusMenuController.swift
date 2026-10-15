@@ -93,6 +93,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         case .link(let url): title = url; symbol = "link"
         case .file(let name): title = name; symbol = "doc"
         case .image: title = "Image"; symbol = "photo"
+        case .pdf: title = "PDF"; symbol = "doc.richtext"
         }
         let entry = item(title) { [service] in service.recopy(id: row.id) }
         if let thumbnail = row.thumbnail {

@@ -3,6 +3,7 @@ import Testing
 
 @Test(arguments: [
     ("public.png", Representation.Kind.image),
+    ("com.adobe.pdf", .pdf),
     ("public.tiff", .image),
     ("public.jpeg", .image),
     ("public.file-url", .file),
