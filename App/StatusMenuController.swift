@@ -1,0 +1,135 @@
+import AppKit
+import CB21Core
+
+/// The menu bar icon and its menu. The menu is rebuilt each time it opens, so it is always current.
+@MainActor
+final class StatusMenuController: NSObject, NSMenuDelegate {
+    private let service: CaptureService
+    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    private let menu = NSMenu()
+
+    init(service: CaptureService) {
+        self.service = service
+        super.init()
+        menu.delegate = self
+        statusItem.menu = menu
+        statusItem.button?.image = Self.icon(paused: false)
+        statusItem.button?.setAccessibilityLabel("cb21 clipboard history")
+        service.model.onPausedChange = { [weak self] paused in
+            self?.statusItem.button?.image = Self.icon(paused: paused)
+        }
+    }
+
+    /// Opens the menu as if the icon had been clicked.
+    func openMenu() {
+        statusItem.button?.performClick(nil)
+    }
+
+    private static func icon(paused: Bool) -> NSImage? {
+        let image = NSImage(named: paused ? "MenuBarPaused" : "MenuBarDefault")
+        image?.isTemplate = true
+        image?.size = NSSize(width: image.map { 18 * $0.size.width / $0.size.height } ?? 14, height: 18)
+        return image
+    }
+
+    // MARK: NSMenuDelegate
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        let model = service.model
+
+        if model.pasteboardAccessDenied {
+            menu.addItem(note("cb21 can't read the clipboard"))
+            menu.addItem(item("Allow in System Settings…") {
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy") {
+                    NSWorkspace.shared.open(url)
+                }
+            })
+            menu.addItem(.separator())
+        }
+        for notice in model.notices {
+            menu.addItem(note(Self.message(for: notice)))
+            menu.addItem(item("Dismiss") { model.dismiss(notice) })
+            menu.addItem(.separator())
+        }
+
+        if model.menuRows.isEmpty {
+            menu.addItem(note("No clips yet"))
+        } else {
+            for row in model.menuRows {
+                menu.addItem(clipItem(row))
+            }
+        }
+        menu.addItem(.separator())
+
+        menu.addItem(item("Open history…") { [service] in HistoryWindowController.shared.show(service: service) })
+        if model.isPaused {
+            menu.addItem(item("Resume capture") { [service] in service.setPause(nil) })
+        } else {
+            let pause = NSMenuItem(title: "Pause capture", action: nil, keyEquivalent: "")
+            let submenu = NSMenu()
+            submenu.addItem(item("Pause for 5 minutes") { [service] in service.setPause(.minutes(5)) })
+            submenu.addItem(item("Pause for 15 minutes") { [service] in service.setPause(.minutes(15)) })
+            submenu.addItem(item("Pause until resumed") { [service] in service.setPause(.untilResumed) })
+            pause.submenu = submenu
+            menu.addItem(pause)
+        }
+        let clear = item("Clear all…") { [service] in service.confirmAndClearAll() }
+        clear.isEnabled = !model.rows.isEmpty
+        menu.addItem(clear)
+        menu.addItem(item("Settings…", key: ",") { [service] in SettingsWindowController.shared.show(service: service) })
+        menu.addItem(item("Quit cb21", key: "q") { NSApp.terminate(nil) })
+    }
+
+    // MARK: Items
+
+    private func clipItem(_ row: HistoryModel.Row) -> NSMenuItem {
+        let title: String
+        let symbol: String?
+        switch row.preview {
+        case .text(let text): title = text; symbol = nil
+        case .link(let url): title = url; symbol = "link"
+        case .file(let name): title = name; symbol = "doc"
+        case .image: title = "Image"; symbol = "photo"
+        }
+        let entry = item(title) { [service] in service.recopy(id: row.id) }
+        if let thumbnail = row.thumbnail {
+            entry.image = thumbnail
+        } else if let symbol {
+            entry.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        }
+        return entry
+    }
+
+    private func note(_ text: String) -> NSMenuItem {
+        let note = NSMenuItem(title: text, action: nil, keyEquivalent: "")
+        note.isEnabled = false
+        return note
+    }
+
+    private func item(_ title: String, key: String = "", action: @escaping () -> Void) -> NSMenuItem {
+        ClosureMenuItem(title: title, key: key, action: action)
+    }
+
+    private static func message(for notice: HistoryModel.Notice) -> String {
+        switch notice {
+        case .clipTooLarge: "A copy was too large for the storage limit and was not saved"
+        case .databaseRecovered: "History was damaged and has been reset; the old file was kept"
+        }
+    }
+}
+
+/// A menu item that runs a closure when chosen.
+private final class ClosureMenuItem: NSMenuItem {
+    private let handler: () -> Void
+
+    init(title: String, key: String, action: @escaping () -> Void) {
+        handler = action
+        super.init(title: title, action: #selector(run), keyEquivalent: key)
+        target = self
+    }
+
+    required init(coder: NSCoder) { fatalError("not used") }
+
+    @objc private func run() { handler() }
+}
