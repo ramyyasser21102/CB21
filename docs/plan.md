@@ -86,10 +86,18 @@ Each step is one branch. **Manual** marks what only the user can verify.
   - Verified automatically: Pause rules (skip, timers, resume, restart, Recopy while paused) are Core tests; app builds and launches. The menu, icon and hotkey need your hands.
   - **Manual:** menu > "Pause capture" offers 5 min, 15 min and until resumed; while paused the icon changes to a pause symbol and the menu shows "Resume capture". Copy something while paused: it must not appear in History, before or after resuming. A 5-minute pause ends by itself (try it, or trust the Core test). Quit and relaunch while paused: capturing again. Settings > "Pause / resume capture" shortcut toggles pause from any app; it is refused if it equals the History shortcut.
 
+## Phase 5b — Accessibility tweaks (requested after Phase 5)
+
+- [ ] S3 `chore/assets`: move and convert the provided artwork: menu bar sprites (`Default.svg`, `Paused.svg`), app icon and README image (`CB21.png`).
+- [ ] 5.7 `feat/status-item-menu`: replace SwiftUI `MenuBarExtra` with an `NSStatusItem` and `NSMenu` so the menu can be opened from code; use the sprites, swapping on Pause. **Manual**
+- [ ] 5.8 `feat/menu-shortcut`: optional global shortcut that opens the menu bar list itself; same validation and conflict rules as the other shortcuts. **Manual**
+- [ ] 5.9 `feat/history-copy-button`: a Copy button beside Delete in the History window: Recopy (the Clip becomes the most recent and goes on the pasteboard) and close the window. **Manual**
+- [ ] 5.10 `feat/latest-clip-dot`: a dot marks the most recently used Clip in the History window. **Manual**
+
 ## Phase 6 — Release
 
 - [ ] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**
-- [ ] 6.2 `feat/app-icon`: app and menu bar icons.
+- [ ] 6.2 `feat/app-icon`: app icon from `CB21.png` (menu bar sprites are done in S3).
 - [ ] 6.3 `docs/readme`: README with install steps, the Gatekeeper instructions and the privacy statement.
 - [ ] 6.4 `feat/release-build`: script that builds the ad-hoc signed zip for GitHub Releases. **Manual:** open the zip on a clean download.
 
