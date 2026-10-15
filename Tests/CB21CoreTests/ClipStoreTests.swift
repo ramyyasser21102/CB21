@@ -170,3 +170,44 @@ private func makeTempDir() throws -> URL {
     let clips = try await store.list()
     #expect(clips.count == 1)
 }
+
+@Test func deleteRemovesOneClip() async throws {
+    let store = try ClipStore.inMemory()
+    let a = textClip("A", at: 1)
+    let b = textClip("B", at: 2)
+    try await store.insert(a)
+    try await store.insert(b)
+    try await store.delete(ids: [a.id])
+    #expect(try await store.list().map(\.id) == [b.id])
+}
+
+@Test func deleteRemovesSeveralClipsAndIgnoresUnknownIds() async throws {
+    let store = try ClipStore.inMemory()
+    let clips = (1...4).map { textClip("c\($0)", at: TimeInterval($0)) }
+    for clip in clips { try await store.insert(clip) }
+    try await store.delete(ids: [clips[0].id, clips[2].id, UUID()])
+    #expect(try await store.list().map(\.id) == [clips[3].id, clips[1].id])
+}
+
+@Test func deleteAllEmptiesHistory() async throws {
+    let store = try ClipStore.inMemory()
+    try await store.insert(textClip("A"))
+    try await store.insert(textClip("B", at: 1))
+    try await store.deleteAll()
+    #expect(try await store.count() == 0)
+}
+
+@Test func deletingImageClipsRemovesTheirFiles() async throws {
+    let dir = try makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let images = dir.appendingPathComponent("images")
+    let store = try ClipStore(path: dir.appendingPathComponent("h.sqlite").path, imagesDirectory: images)
+    let one = imageClip([1], at: 1)
+    let two = imageClip([2], at: 2)
+    try await store.insert(one)
+    try await store.insert(two)
+    try await store.delete(ids: [one.id])
+    #expect(try FileManager.default.contentsOfDirectory(atPath: images.path).count == 1)
+    try await store.deleteAll()
+    #expect(try FileManager.default.contentsOfDirectory(atPath: images.path).isEmpty)
+}
