@@ -95,6 +95,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         clear.isEnabled = !model.rows.isEmpty
         menu.addItem(clear)
         menu.addItem(item("Settings…", key: ",") { [service] in SettingsWindowController.shared.show(service: service) })
+        menu.addItem(item("Welcome…") { [service] in WelcomeWindowController.shared.show(service: service) })
         menu.addItem(item("Quit cb21", key: "q") { NSApp.terminate(nil) })
     }
 
