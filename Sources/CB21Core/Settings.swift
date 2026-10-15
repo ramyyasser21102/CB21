@@ -8,6 +8,8 @@ public struct SettingsValues: Sendable, Equatable, Codable {
     public var historyShortcut: Shortcut?
     /// Pauses capture until resumed, or resumes it. Unbound by default.
     public var pauseShortcut: Shortcut?
+    /// Opens the menu bar list itself. Unbound by default.
+    public var menuShortcut: Shortcut?
 
     public init() {}
 
@@ -16,6 +18,7 @@ public struct SettingsValues: Sendable, Equatable, Codable {
         limits = try c.decodeIfPresent(Limits.self, forKey: .limits) ?? .default
         historyShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .historyShortcut)
         pauseShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .pauseShortcut)
+        menuShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .menuShortcut)
     }
 }
 

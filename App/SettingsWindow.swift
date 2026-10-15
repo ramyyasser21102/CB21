@@ -54,6 +54,11 @@ struct SettingsView: View {
                     onChange: { service.setHistoryShortcut($0) }
                 )
                 ShortcutRecorder(
+                    title: "Open menu bar list",
+                    shortcut: settings.values.menuShortcut,
+                    onChange: { service.setMenuShortcut($0) }
+                )
+                ShortcutRecorder(
                     title: "Pause / resume capture",
                     shortcut: settings.values.pauseShortcut,
                     onChange: { service.setPauseShortcut($0) }

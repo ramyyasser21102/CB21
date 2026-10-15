@@ -54,3 +54,12 @@ private func freshDefaults() -> UserDefaults {
     SettingsPersistence(defaults: defaults).save(values)
     #expect(SettingsPersistence(defaults: defaults).load().pauseShortcut == values.pauseShortcut)
 }
+
+@Test func menuShortcutIsUnboundByDefaultAndPersists() {
+    #expect(SettingsValues().menuShortcut == nil)
+    let defaults = freshDefaults()
+    var values = SettingsValues()
+    values.menuShortcut = Shortcut(keyCode: 46, modifiers: [.control, .option])
+    SettingsPersistence(defaults: defaults).save(values)
+    #expect(SettingsPersistence(defaults: defaults).load().menuShortcut == values.menuShortcut)
+}
