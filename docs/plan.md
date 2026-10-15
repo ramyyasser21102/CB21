@@ -72,7 +72,8 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 ## Phase 5 — Settings, shortcuts, Pause
 
-- [ ] 5.1 `feat/settings-shell`: Settings pane with Shortcuts, History and General sections; settings persist.
+- [x] 5.1 `feat/settings-shell`: Settings pane with Shortcuts, History and General sections; settings persist.
+  - Verified automatically: settings save/load/default tests in Core; app builds. **Manual:** menu "Settings…" (or Cmd-comma with the menu open) opens a window with Shortcuts, History and General sections; History shows 100 clips and 100 MB.
 - [ ] 5.2 `feat/limits-ui`: Limits controls with defaults (100 Clips, 100 MB) and the trim warning. **Manual**
 - [ ] 5.3 `feat/shortcut-validation`: shortcut rules in Core (modifier required, system shortcuts rejected), tested.
 - [ ] 5.4 `feat/history-shortcut`: shortcut recorder and global binding that toggles the History window. **Manual**

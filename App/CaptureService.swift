@@ -8,6 +8,7 @@ final class CaptureService {
     static let shared = CaptureService()
 
     let model = HistoryModel()
+    let settings = SettingsModel()
     private(set) var store: ClipStore?
     private(set) var engine: CaptureEngine?
     private(set) var recoveredFrom: URL?
@@ -65,7 +66,8 @@ final class CaptureService {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             let opened = try ClipStore.openRecovering(
                 at: dir.appendingPathComponent("history.sqlite"),
-                imagesDirectory: dir.appendingPathComponent("images", isDirectory: true)
+                imagesDirectory: dir.appendingPathComponent("images", isDirectory: true),
+                limits: settings.values.limits
             )
             store = opened.store
             recoveredFrom = opened.recoveredFrom
