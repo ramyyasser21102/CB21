@@ -22,7 +22,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 - [x] 1.1 `feat/package-skeleton`: `Package.swift` with `CB21Core` and its test target, Swift 6 mode, one passing test.
 - [x] 1.2 `feat/app-target`: XcodeGen `project.yml`, `cb21` app target, `LSUIElement`, ad-hoc signing, builds with `xcodebuild`.
-- [~] 1.3 `feat/menu-bar-stub`: menu bar icon with a stub menu (Quit only). **Manual:** icon appears, menu opens.
+- [x] 1.3 `feat/menu-bar-stub`: menu bar icon with a stub menu (Quit only). **Manual:** icon appears, menu opens.
   - Verified automatically: builds, launches, process stays running for 4 s, no crash report.
   - **Manual:** run `open` on the built `cb21.app` (Debug build in DerivedData). Check that a clipboard icon appears in the menu bar, no Dock icon shows, and the menu offers Quit cb21 (Cmd-Q).
 
@@ -45,13 +45,13 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 3.2 `feat/pasteboard-watcher`: real `NSPasteboard` watcher in the app target feeding Capture.
   - Verified automatically: ran the built app against a throwaway data folder, `pbcopy` text was captured, a repeated copy stored once. Known limit: only the first pasteboard item is read, so copying several files at once keeps only the first.
 - [x] 3.3 `feat/menu-previews`: preview text, thumbnail, file name and URL per Representation (in Core, tested).
-- [~] 3.4 `feat/menu-history`: menu lists the 10 most recent Clips; clicking a Clip Recopies it. **Manual**
+- [x] 3.4 `feat/menu-history`: menu lists the 10 most recent Clips; clicking a Clip Recopies it. **Manual**
   - Verified automatically: builds, launches, capture feeds the model. The real menu could not be read (no assistive access for the agent).
   - **Manual:** run the Debug build, copy 3 or 4 different things (text, a link, an image, a file in Finder). Open the menu: newest first, text truncated, link and file icons, image thumbnail. Click an older item, paste somewhere: it pastes, moves to the top and does not appear twice.
-- [~] 3.5 `feat/pasteboard-access-notice`: first-launch message and System Settings link when access is denied. **Manual**
+- [x] 3.5 `feat/pasteboard-access-notice`: first-launch message and System Settings link when access is denied. **Manual**
   - Verified automatically: builds. The denied state needs macOS 15.4 or later (`accessBehavior`), checked with `#available`; the System Settings link opens the general Privacy & Security pane.
   - **Manual:** in System Settings > Privacy & Security > "Paste from Other Apps", set cb21 to Deny (it appears after cb21 first reads the clipboard). The menu should show "cb21 can't read the clipboard" with a working Settings link. Setting it back to Allow should clear the message within a second.
-- [~] 3.6 `feat/db-notice`: one-time notices for oversized Clips and database recovery in the menu. **Manual**
+- [x] 3.6 `feat/db-notice`: one-time notices for oversized Clips and database recovery in the menu. **Manual**
   - Verified automatically: real app with a corrupt `history.sqlite` moved it aside and started empty; a 105 MB copy was rejected and stored nothing; a small copy afterwards was stored.
   - **Manual:** the two menu messages themselves. Put garbage in `~/Library/Application Support/cb21/history.sqlite` (with cb21 quit) and launch: the menu shows "History was damaged and has been reset" with Dismiss. The oversized message appears once Settings can lower the storage Limit (step 5.2); check it then.
 
