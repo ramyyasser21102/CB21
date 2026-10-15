@@ -146,6 +146,18 @@ Order: the stored facts first (7.1–7.3), then the logic in Core (7.4), then th
   - **Manual:** select an image clip: the picture shows scaled to fit above its facts. Select a PDF clip (copy a page from Preview) or a PDF file copied in Finder: first page appears. Select a file such as a photo or document copied in Finder: a thumbnail appears; delete or move that file and select the clip again: "File no longer exists" and the saved facts remain. Click quickly between clips: no freezing, and the picture always matches the selected clip.
 - [x] 7.8 `docs/readme-source-app`: README privacy section mentions the locally stored Source app and the new Detail pane.
 
+## Phase 8 — Welcome (CB-8)
+
+Order: the saved flag and the page flow in Core (8.1–8.2), then the window (8.3), then the pages that touch the system (8.4–8.6).
+
+- [ ] 8.1 `feat/welcome-flag`: `welcomeCompleted` in `SettingsValues`, false by default, so older saved settings still load; Core tests.
+- [ ] 8.2 `feat/welcome-flow`: `WelcomeFlow` in Core: the five pages, next, back, skip, last page, progress, finish sets completed. Core tests.
+- [ ] 8.3 `feat/welcome-window`: fixed-size black window with hidden title bar, always dark; page container with slide and fade transitions, stretching progress dots, the logo draw-in; Reduce Motion gives cross-fades; Welcome and Privacy pages; opens automatically when the flag is false and from "Welcome…" in the menu and Settings. **Manual**
+- [ ] 8.4 `feat/welcome-clipboard`: the clipboard page: reads the clipboard once to trigger the system prompt, live state (allowed, ask, denied, unknown before 15.4) with the explanation text in Core (tested), check pop, "Open System Settings". **Manual**
+- [ ] 8.5 `feat/welcome-login`: the launch-at-login page with the approval hint. **Manual**
+- [ ] 8.6 `feat/welcome-shortcuts`: the shortcuts page with the three recorders, styled for the dark window. **Manual**
+- [ ] 8.7 `docs/readme-welcome`: README mentions the Welcome window.
+
 ## Hand-back note
 
 When a step stops for the user, write this under the step: what was built and the branch; what was verified automatically; what was not, with exact steps to try and what to look for; what was tried and where it stopped; which later steps are independent.

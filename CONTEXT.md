@@ -43,6 +43,10 @@ _Avoid_: Properties, info
 The part of the History window that shows one selected Clip in full, with its Metadata.
 _Avoid_: Inspector, preview pane
 
+**Welcome**:
+The first-run window that walks the user through clipboard access, launch at login, shortcuts and privacy. Always dark, black and white. It can be skipped and reopened.
+_Avoid_: Onboarding, wizard, setup assistant
+
 **History window**:
 The floating panel showing the full History, where the user browses, selects and deletes Clips. The menu shows only the latest Clips.
 _Avoid_: Popup, manager
