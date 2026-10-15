@@ -37,7 +37,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 2.7 `feat/limits-eviction`: item and storage Limits, least recently used evicted first, lowering a Limit trims.
 - [x] 2.8 `feat/oversized-clip`: a Clip larger than the storage Limit is rejected with a reason.
 - [x] 2.9 `feat/orphan-sweep`: startup removes image files with no row.
-- [ ] 2.10 `feat/corrupt-db-recovery`: unreadable database moved aside under a timestamped name, new empty History, notice flag set.
+- [x] 2.10 `feat/corrupt-db-recovery`: unreadable database moved aside under a timestamped name, new empty History, notice flag set.
 
 ## Phase 3 — Capture and quick access
 

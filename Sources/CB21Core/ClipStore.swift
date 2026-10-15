@@ -60,6 +60,43 @@ public actor ClipStore {
         try ClipStore(path: ":memory:", limits: limits)
     }
 
+    /// Opens the database at `url`. If it is corrupt, moves it aside under a timestamped name and
+    /// starts a new empty one. `recoveredFrom` is the moved file's location when that happened.
+    public static func openRecovering(
+        at url: URL,
+        imagesDirectory: URL? = nil,
+        limits: Limits = .default,
+        now: Date = Date()
+    ) throws -> (store: ClipStore, recoveredFrom: URL?) {
+        if FileManager.default.fileExists(atPath: url.path) {
+            if let store = try? ClipStore(path: url.path, imagesDirectory: imagesDirectory, limits: limits),
+               store.isIntact() {
+                return (store, nil)
+            }
+            let stamp = ISO8601DateFormatter().string(from: now).replacingOccurrences(of: ":", with: "-")
+            let base = url.deletingPathExtension().lastPathComponent
+            let moved = url.deletingLastPathComponent()
+                .appendingPathComponent("\(base)-corrupt-\(stamp).\(url.pathExtension)")
+            try FileManager.default.moveItem(at: url, to: moved)
+            for suffix in ["-wal", "-shm"] {
+                try? FileManager.default.removeItem(atPath: url.path + suffix)
+            }
+            let store = try ClipStore(path: url.path, imagesDirectory: imagesDirectory, limits: limits)
+            return (store, moved)
+        }
+        return (try ClipStore(path: url.path, imagesDirectory: imagesDirectory, limits: limits), nil)
+    }
+
+    /// Runs SQLite's quick integrity check. Safe to call from outside the actor only during opening.
+    nonisolated func isIntact() -> Bool {
+        guard let db else { return false }
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, "PRAGMA quick_check", -1, &stmt, nil) == SQLITE_OK, let stmt else { return false }
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_step(stmt) == SQLITE_ROW, let text = sqlite3_column_text(stmt, 0) else { return false }
+        return String(cString: text) == "ok"
+    }
+
     deinit {
         sqlite3_close(db)
     }
