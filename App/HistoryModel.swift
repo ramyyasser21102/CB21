@@ -17,6 +17,22 @@ final class HistoryModel {
     private(set) var rows: [Row] = []
     private(set) var pasteboardAccessDenied = false
 
+    /// One-time messages shown at the top of the menu until dismissed.
+    enum Notice: Hashable {
+        case clipTooLarge
+        case databaseRecovered
+    }
+
+    private(set) var notices: [Notice] = []
+
+    func post(_ notice: Notice) {
+        if !notices.contains(notice) { notices.append(notice) }
+    }
+
+    func dismiss(_ notice: Notice) {
+        notices.removeAll { $0 == notice }
+    }
+
     func setPasteboardAccessDenied(_ denied: Bool) {
         if pasteboardAccessDenied != denied { pasteboardAccessDenied = denied }
     }

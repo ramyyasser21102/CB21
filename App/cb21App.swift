@@ -30,6 +30,11 @@ struct MenuContent: View {
             }
             Divider()
         }
+        ForEach(model.notices, id: \.self) { notice in
+            Text(message(for: notice)).disabled(true)
+            Button("Dismiss") { model.dismiss(notice) }
+            Divider()
+        }
         if model.rows.isEmpty {
             Text("No clips yet").disabled(true)
         } else {
@@ -40,6 +45,13 @@ struct MenuContent: View {
         Divider()
         Button("Quit cb21") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
+    }
+
+    private func message(for notice: HistoryModel.Notice) -> String {
+        switch notice {
+        case .clipTooLarge: "A copy was too large for the storage limit and was not saved"
+        case .databaseRecovered: "History was damaged and has been reset; the old file was kept"
+        }
     }
 
     @ViewBuilder
