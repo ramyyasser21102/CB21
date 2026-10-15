@@ -103,6 +103,8 @@ Each step is one branch. **Manual** marks what only the user can verify.
   - Verified automatically: builds. Interpretation: the dot sits on the top row, the most recently used Clip, which is also the one you last copied or Recopied.
   - **Manual:** a small accent-colored dot appears left of the first row only. Copy something new, or press Copy on an older Clip: the dot follows the Clip to the top.
 
+- [x] S4 `fix/menu-latest-dot`: the most recent Clip is also marked with a dot in the menu bar list (5.10 only covered the History window). **Manual:** open the menu: a dot sits left of the top clip only.
+
 ## Phase 6 — Release
 
 - [x] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**
