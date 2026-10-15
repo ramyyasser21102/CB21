@@ -88,7 +88,8 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 ## Phase 5b — Accessibility tweaks (requested after Phase 5)
 
-- [ ] S3 `chore/assets`: move and convert the provided artwork: menu bar sprites (`Default.svg`, `Paused.svg`), app icon and README image (`CB21.png`).
+- [x] S3 `chore/assets`: move and convert the provided artwork: menu bar sprites (`Default.svg`, `Paused.svg`), app icon and README image (`CB21.png`).
+  - Sources live in `design/` (menu bar SVGs) and `docs/assets/cb21.png` (README image and icon source). `swift scripts/make-assets.swift` regenerates the asset catalog: black template menu bar images at 18 pt (1x-3x) and the app icon on the 1024 grid. Note `cb21.png` is 828x825, not square, so it is scaled to fit; a 1024x1024 export would be crisper for the large icon sizes.
 - [ ] 5.7 `feat/status-item-menu`: replace SwiftUI `MenuBarExtra` with an `NSStatusItem` and `NSMenu` so the menu can be opened from code; use the sprites, swapping on Pause. **Manual**
 - [ ] 5.8 `feat/menu-shortcut`: optional global shortcut that opens the menu bar list itself; same validation and conflict rules as the other shortcuts. **Manual**
 - [ ] 5.9 `feat/history-copy-button`: a Copy button beside Delete in the History window: Recopy (the Clip becomes the most recent and goes on the pasteboard) and close the window. **Manual**
@@ -97,7 +98,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 ## Phase 6 — Release
 
 - [ ] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**
-- [ ] 6.2 `feat/app-icon`: app icon from `CB21.png` (menu bar sprites are done in S3).
+- [x] 6.2 `feat/app-icon`: app icon from `CB21.png` (menu bar sprites are done in S3). Done with S3 (AppIcon in the catalog; verified in the built bundle).
 - [ ] 6.3 `docs/readme`: README with install steps, the Gatekeeper instructions and the privacy statement.
 - [ ] 6.4 `feat/release-build`: script that builds the ad-hoc signed zip for GitHub Releases. **Manual:** open the zip on a clean download.
 
