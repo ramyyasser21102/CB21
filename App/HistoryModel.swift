@@ -21,6 +21,11 @@ final class HistoryModel {
     /// The latest Clips, as shown in the menu.
     var menuRows: [Row] { Array(rows.prefix(Self.menuLimit)) }
     private(set) var pasteboardAccessDenied = false
+    private(set) var isPaused = false
+
+    func setPaused(_ paused: Bool) {
+        if isPaused != paused { isPaused = paused }
+    }
 
     /// One-time messages shown at the top of the menu until dismissed.
     enum Notice: Hashable {

@@ -11,6 +11,7 @@ final class CaptureService {
     let settings = SettingsModel()
     private let hotKeys = GlobalHotKeys()
     private var historyHotKeyID: UInt32?
+    private var pauseHotKeyID: UInt32?
     private(set) var store: ClipStore?
     private(set) var engine: CaptureEngine?
     private(set) var recoveredFrom: URL?
@@ -37,23 +38,55 @@ final class CaptureService {
     /// Binds (or, with nil, clears) the global shortcut that toggles the History window.
     /// Returns a message to show when the shortcut was refused.
     func setHistoryShortcut(_ shortcut: Shortcut?) -> String? {
-        if let shortcut {
-            if let problem = ShortcutValidator.validate(shortcut) {
-                return Self.message(for: problem)
-            }
+        setShortcut(shortcut, current: settings.values.historyShortcut, other: settings.values.pauseShortcut,
+                    id: \.historyHotKeyID, register: registerHistory) { $0.historyShortcut = shortcut }
+    }
+
+    /// Binds (or, with nil, clears) the global shortcut that pauses or resumes capture.
+    func setPauseShortcut(_ shortcut: Shortcut?) -> String? {
+        setShortcut(shortcut, current: settings.values.pauseShortcut, other: settings.values.historyShortcut,
+                    id: \.pauseHotKeyID, register: registerPause) { $0.pauseShortcut = shortcut }
+    }
+
+    private func setShortcut(
+        _ shortcut: Shortcut?,
+        current: Shortcut?,
+        other: Shortcut?,
+        id: ReferenceWritableKeyPath<CaptureService, UInt32?>,
+        register: (Shortcut) -> UInt32?,
+        save: (inout SettingsValues) -> Void
+    ) -> String? {
+        if let shortcut, let problem = ShortcutValidator.validate(shortcut, takenByOtherActions: other.map { [$0] } ?? []) {
+            return Self.message(for: problem)
         }
-        let previous = historyHotKeyID
-        if let previous { hotKeys.unregister(previous) }
-        historyHotKeyID = nil
+        if let previous = self[keyPath: id] { hotKeys.unregister(previous) }
+        self[keyPath: id] = nil
         if let shortcut {
-            guard let id = registerHistory(shortcut) else {
-                if let old = settings.values.historyShortcut { historyHotKeyID = registerHistory(old) }
+            guard let newID = register(shortcut) else {
+                if let current { self[keyPath: id] = register(current) }
                 return "Another app already uses this shortcut. Choose a different one."
             }
-            historyHotKeyID = id
+            self[keyPath: id] = newID
         }
-        settings.update { $0.historyShortcut = shortcut }
+        settings.update(save)
         return nil
+    }
+
+    private func registerPause(_ shortcut: Shortcut) -> UInt32? {
+        hotKeys.register(shortcut) { [weak self] in self?.togglePause() }
+    }
+
+    /// Pauses capture for the given time, or resumes it when `duration` is nil.
+    func setPause(_ duration: PauseDuration?) {
+        guard let engine else { return }
+        Task {
+            if let duration { await engine.pause(duration) } else { await engine.resume() }
+            model.setPaused(await engine.isPaused())
+        }
+    }
+
+    func togglePause() {
+        setPause(model.isPaused ? nil : .untilResumed)
     }
 
     private func registerHistory(_ shortcut: Shortcut) -> UInt32? {
@@ -136,6 +169,9 @@ final class CaptureService {
             if let saved = settings.values.historyShortcut {
                 historyHotKeyID = registerHistory(saved)
             }
+            if let saved = settings.values.pauseShortcut {
+                pauseHotKeyID = registerPause(saved)
+            }
             let model = self.model
             if opened.recoveredFrom != nil { model.post(.databaseRecovered) }
             task = Task {
@@ -143,6 +179,7 @@ final class CaptureService {
                 await model.refresh(from: opened.store)
                 while !Task.isCancelled {
                     model.setPasteboardAccessDenied(pasteboard.isAccessDenied)
+                    model.setPaused(await engine.isPaused())
                     switch try? await engine.poll() {
                     case .captured(.rejectedTooLarge):
                         model.post(.clipTooLarge)

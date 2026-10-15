@@ -45,3 +45,12 @@ private func freshDefaults() -> UserDefaults {
     #expect(loaded.limits == Limits(maxItems: 10, maxBytes: 2048))
     #expect(loaded.historyShortcut == nil)
 }
+
+@Test func pauseShortcutIsUnboundByDefaultAndPersists() {
+    #expect(SettingsValues().pauseShortcut == nil)
+    let defaults = freshDefaults()
+    var values = SettingsValues()
+    values.pauseShortcut = Shortcut(keyCode: 35, modifiers: [.control, .option])
+    SettingsPersistence(defaults: defaults).save(values)
+    #expect(SettingsPersistence(defaults: defaults).load().pauseShortcut == values.pauseShortcut)
+}

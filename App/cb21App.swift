@@ -10,13 +10,14 @@ struct CB21App: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("cb21", systemImage: "doc.on.clipboard") {
+        MenuBarExtra("cb21", systemImage: service.model.isPaused ? "pause.circle" : "doc.on.clipboard") {
             MenuContent(
                 model: service.model,
                 recopy: { id in service.recopy(id: id) },
                 openHistory: { HistoryWindowController.shared.show(service: service) },
                 clearAll: { service.confirmAndClearAll() },
-                openSettings: { SettingsWindowController.shared.show(service: service) }
+                openSettings: { SettingsWindowController.shared.show(service: service) },
+                setPause: { service.setPause($0) }
             )
         }
     }
@@ -28,6 +29,7 @@ struct MenuContent: View {
     let openHistory: () -> Void
     let clearAll: () -> Void
     let openSettings: () -> Void
+    let setPause: (PauseDuration?) -> Void
 
     var body: some View {
         if model.pasteboardAccessDenied {
@@ -53,6 +55,15 @@ struct MenuContent: View {
         }
         Divider()
         Button("Open history…", action: openHistory)
+        if model.isPaused {
+            Button("Resume capture") { setPause(nil) }
+        } else {
+            Menu("Pause capture") {
+                Button("Pause for 5 minutes") { setPause(.minutes(5)) }
+                Button("Pause for 15 minutes") { setPause(.minutes(15)) }
+                Button("Pause until resumed") { setPause(.untilResumed) }
+            }
+        }
         Button("Clear all…", action: clearAll)
             .disabled(model.rows.isEmpty)
         Button("Settings…", action: openSettings)

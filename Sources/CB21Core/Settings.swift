@@ -6,6 +6,8 @@ public struct SettingsValues: Sendable, Equatable, Codable {
     public var limits: Limits = .default
     /// Opens the History window from any app. Unbound by default.
     public var historyShortcut: Shortcut?
+    /// Pauses capture until resumed, or resumes it. Unbound by default.
+    public var pauseShortcut: Shortcut?
 
     public init() {}
 
@@ -13,6 +15,7 @@ public struct SettingsValues: Sendable, Equatable, Codable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         limits = try c.decodeIfPresent(Limits.self, forKey: .limits) ?? .default
         historyShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .historyShortcut)
+        pauseShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .pauseShortcut)
     }
 }
 
