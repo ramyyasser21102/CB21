@@ -111,7 +111,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 6.2 `feat/app-icon`: app icon from `CB21.png` (menu bar sprites are done in S3). Done with S3 (AppIcon in the catalog; verified in the built bundle).
 - [x] 6.3 `docs/readme`: README with install steps, the Gatekeeper instructions and the privacy statement.
   - The Gatekeeper steps follow macOS 15+ behavior (Open Anyway in Privacy & Security, or clearing the quarantine flag). **Manual:** read it once; the install steps can only be proven on a clean download (see 6.4).
-- [ ] 6.4 `feat/release-build`: script that builds the ad-hoc signed zip for GitHub Releases. **Manual:** open the zip on a clean download.
+- [x] 6.4 `feat/release-build`: script that builds the ad-hoc signed zip for GitHub Releases. **Manual:** open the zip on a clean download.
+  - Verified automatically: `scripts/build-release.sh` builds a universal (arm64 + x86_64) Release app, ad-hoc signs it, zips it to `dist/cb21-1.0.0.zip` with a SHA-256 file; a fresh unzip launches and captures a copy. `spctl` rejects it, as expected without notarization.
+  - **Manual:** on a clean download (or after `xattr -w com.apple.quarantine "0081;00000000;Safari;" cb21.app`), follow the README: first launch is blocked, Open Anyway works, the icon appears. Then publish the zip as a GitHub Release (not done: it is outward-facing).
 
 ## Hand-back note
 
