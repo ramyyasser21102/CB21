@@ -140,6 +140,12 @@ final class CaptureService {
         return true
     }
 
+    /// The full Clip, for the Detail pane.
+    func clip(id: UUID) async -> Clip? {
+        guard let store else { return nil }
+        return try? await store.clip(id: id)
+    }
+
     /// Permanently deletes Clips from History and disk.
     func delete(ids: Set<UUID>) {
         guard let store, !ids.isEmpty else { return }
