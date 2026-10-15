@@ -10,6 +10,9 @@ final class HistoryModel {
         let id: UUID
         let preview: ClipPreview
         let thumbnail: NSImage?
+        let createdAt: Date
+        let byteCount: Int
+        let sourceAppName: String?
     }
 
     static let menuLimit = 10
@@ -60,7 +63,10 @@ final class HistoryModel {
             if thumbnails[clip.id] == nil, let thumb = Self.thumbnail(for: clip) {
                 thumbnails[clip.id] = thumb
             }
-            return Row(id: clip.id, preview: clip.preview, thumbnail: thumbnails[clip.id])
+            return Row(
+                id: clip.id, preview: clip.preview, thumbnail: thumbnails[clip.id],
+                createdAt: clip.createdAt, byteCount: clip.byteCount, sourceAppName: clip.sourceAppName
+            )
         }
     }
 

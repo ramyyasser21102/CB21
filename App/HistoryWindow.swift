@@ -70,7 +70,19 @@ struct HistoryView: View {
                         .help("Most recent clip")
                         .accessibilityHidden(row.id != model.rows.first?.id)
                         .accessibilityLabel("Most recent")
-                    ClipLabel(row: row).lineLimit(1)
+                    VStack(alignment: .leading, spacing: 2) {
+                        ClipLabel(row: row).lineLimit(1)
+                        // Re-evaluated every 30 s so "5 min ago" doesn't go stale while the window is open.
+                        TimelineView(.periodic(from: .now, by: 30)) { context in
+                            Text(ClipSubtitle.make(
+                                createdAt: row.createdAt, byteCount: row.byteCount,
+                                sourceAppName: row.sourceAppName, now: context.date
+                            ))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                        }
+                    }
                     Spacer()
                     Button {
                         copy(row.id)
