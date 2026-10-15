@@ -20,7 +20,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 ## Phase 1 — Foundation
 
-- [ ] 1.1 `feat/package-skeleton`: `Package.swift` with `CB21Core` and its test target, Swift 6 mode, one passing test.
+- [x] 1.1 `feat/package-skeleton`: `Package.swift` with `CB21Core` and its test target, Swift 6 mode, one passing test.
 - [ ] 1.2 `feat/app-target`: XcodeGen `project.yml`, `cb21` app target, `LSUIElement`, ad-hoc signing, builds with `xcodebuild`.
 - [ ] 1.3 `feat/menu-bar-stub`: menu bar icon with a stub menu (Quit only). **Manual:** icon appears, menu opens.
 
