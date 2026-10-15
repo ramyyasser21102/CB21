@@ -60,7 +60,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 4.1 `feat/history-window`: floating panel listing the full History with previews. **Manual**
   - Verified automatically: builds and launches. The window is built from `NSHostingController` + SwiftUI `List(selection:)`, so Shift/Cmd-click selection is the system behavior.
   - **Manual:** menu > "Open history…" opens a floating window with the full History (not just 10). Double-clicking a row Recopies it. The window comes to the front, and with no Clips shows the empty message.
-- [ ] 4.2 `feat/delete-ui`: per-Clip delete button and Delete key. **Manual**
+- [x] 4.2 `feat/delete-ui`: per-Clip delete button and Delete key. **Manual**
+  - Verified automatically: builds; deletion itself (rows and image files) is covered by `CB21Core` tests.
+  - **Manual:** each row has a trash button that deletes only that Clip. Selecting a row and pressing Delete removes it. Check the Clip is gone from the menu too.
 - [ ] 4.3 `feat/multi-select`: Shift/Cmd-click multi-select, then delete. **Manual**
 - [ ] 4.4 `feat/clear-all`: Clear all with confirmation, from the menu and the window. **Manual**
 
