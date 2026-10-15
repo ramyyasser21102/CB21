@@ -142,6 +142,19 @@ public actor ClipStore {
         removeImageFiles(files)
     }
 
+    /// Removes image files that no row refers to, left behind by an interrupted delete. Returns how many.
+    public func sweepOrphanedImageFiles() throws -> Int {
+        guard let imagesDirectory,
+              let names = try? FileManager.default.contentsOfDirectory(atPath: imagesDirectory.path) else { return 0 }
+        var known = Set<String>()
+        try query(try handle(), "SELECT file_name FROM representations WHERE file_name IS NOT NULL") {
+            known.insert(String(cString: sqlite3_column_text($0, 0)))
+        }
+        let orphans = names.filter { !known.contains($0) }
+        removeImageFiles(orphans)
+        return orphans.count
+    }
+
     private func removeImageFiles(_ names: [String]) {
         guard let imagesDirectory else { return }
         for name in names {
