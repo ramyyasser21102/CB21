@@ -40,3 +40,4 @@ AuthKey_*.p8
 
 # XcodeGen output
 *.xcodeproj/
+App/Info.plist
