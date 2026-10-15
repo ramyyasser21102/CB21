@@ -56,8 +56,10 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         if model.menuRows.isEmpty {
             menu.addItem(note("No clips yet"))
         } else {
-            for row in model.menuRows {
-                menu.addItem(clipItem(row))
+            for (index, row) in model.menuRows.enumerated() {
+                let entry = clipItem(row)
+                if index == 0 { markAsMostRecent(entry) }
+                menu.addItem(entry)
             }
         }
         menu.addItem(.separator())
@@ -99,6 +101,16 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             entry.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         }
         return entry
+    }
+
+    /// A dot in the state column marks the most recently used Clip, as in the History window.
+    private func markAsMostRecent(_ entry: NSMenuItem) {
+        let config = NSImage.SymbolConfiguration(pointSize: 7, weight: .regular)
+        let dot = NSImage(systemSymbolName: "circle.fill", accessibilityDescription: "Most recent")?
+            .withSymbolConfiguration(config)
+        entry.onStateImage = dot
+        entry.state = .on
+        entry.toolTip = "Most recent clip"
     }
 
     private func note(_ text: String) -> NSMenuItem {
