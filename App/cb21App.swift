@@ -22,5 +22,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         service.openMenu = { [weak statusMenu] in statusMenu?.openMenu() }
         service.shouldOpenMenu = { [weak statusMenu] in statusMenu?.shouldOpenFromShortcut() ?? false }
         self.statusMenu = statusMenu
+        WelcomeWindowController.shared.showIfFirstRun(service: service)
     }
 }

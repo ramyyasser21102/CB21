@@ -56,8 +56,29 @@ func menuBarImageSet(name: String, svgPath: String) throws {
     ], to: "\(dir)/Contents.json")
 }
 
+/// A white copy of the glyph for the Welcome window: 160 pt tall, not a template image.
+func welcomeLogoImageSet(svgPath: String) throws {
+    let svg = try String(contentsOfFile: svgPath, encoding: .utf8)
+    let image = NSImage(data: Data(svg.utf8))!
+    let aspect = image.size.width / image.size.height
+    let dir = "\(catalog)/WelcomeLogo.imageset"
+    var images: [[String: String]] = []
+    for scale in 1...3 {
+        let h = 160 * scale
+        let w = Int((Double(h) * aspect).rounded())
+        let rep = bitmap(width: w, height: h) { rect in
+            image.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
+        }
+        let file = "WelcomeLogo@\(scale)x.png"
+        try write(rep, to: "\(dir)/\(file)")
+        images.append(["idiom": "universal", "filename": file, "scale": "\(scale)x"])
+    }
+    try json(["images": images, "info": ["author": "xcode", "version": 1]], to: "\(dir)/Contents.json")
+}
+
 try menuBarImageSet(name: "MenuBarDefault", svgPath: "\(root)/design/menubar-default.svg")
 try menuBarImageSet(name: "MenuBarPaused", svgPath: "\(root)/design/menubar-paused.svg")
+try welcomeLogoImageSet(svgPath: "\(root)/design/menubar-default.svg")
 
 // MARK: App icon: the artwork at 824 pt inside a 1024 pt canvas, as the macOS icon grid expects.
 

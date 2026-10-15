@@ -100,11 +100,12 @@ struct SettingsView: View {
                 if let launchError {
                     Text(launchError).font(.caption).foregroundStyle(.red)
                 }
+                Button("Show Welcome…") { WelcomeWindowController.shared.show(service: service) }
             }
         }
         .formStyle(.grouped)
         .onAppear { launchStatus = LaunchAtLogin.status }
-        .frame(width: 440, height: 460)
+        .frame(width: 440, height: 490)
     }
 
     private func apply() async {
