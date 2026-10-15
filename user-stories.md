@@ -85,7 +85,7 @@ A single pane with three sections:
 - Native macOS app (Swift/SwiftUI, with AppKit for the menu bar and pasteboard), macOS 14 (Sonoma) or later.
 - Launches at login (optional toggle, off by default).
 - No network access, no telemetry.
-- Free. Distributed outside the App Store, notarized and not sandboxed (see `docs/adr/0002-direct-distribution-not-sandboxed.md`).
+- Free. Distributed outside the App Store, ad-hoc signed, not notarized and not sandboxed (see `docs/adr/0002-direct-distribution-not-sandboxed.md`).
 
 ## Excluded from v1
 
