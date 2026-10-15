@@ -86,6 +86,18 @@ public actor ClipStore {
         }
     }
 
+    /// Moves an existing Clip to the top of History. It is not captured again.
+    public func recopy(id: UUID, at date: Date = Date()) throws {
+        let db = try handle()
+        try run(db, "UPDATE clips SET last_used_at = ? WHERE id = ?") { stmt in
+            sqlite3_bind_double(stmt, 1, date.timeIntervalSince1970)
+            sqlite3_bind_text(stmt, 2, id.uuidString, -1, sqliteTransient)
+        }
+        guard sqlite3_changes(db) == 1 else {
+            throw StoreError(message: "no Clip with id \(id)")
+        }
+    }
+
     /// All Clips, most recently used first.
     public func list() throws -> [Clip] {
         let db = try handle()
