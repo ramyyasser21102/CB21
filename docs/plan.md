@@ -93,7 +93,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 5.7 `feat/status-item-menu`: replace SwiftUI `MenuBarExtra` with an `NSStatusItem` and `NSMenu` so the menu can be opened from code; use the sprites, swapping on Pause. **Manual**
   - Verified automatically: builds, launches, capture still works through the new service start; screenshots and accessibility are not permitted for the agent, so the icon and menu are unseen.
   - **Manual:** the menu bar shows the new clipboard sprite (Default); the menu has the same items as before, rebuilt fresh on every open; image clips show a thumbnail, links and files an icon. Pausing swaps the icon to the Paused sprite and back on resume. Light and dark menu bar both look right (template image).
-- [ ] 5.8 `feat/menu-shortcut`: optional global shortcut that opens the menu bar list itself; same validation and conflict rules as the other shortcuts. **Manual**
+- [x] 5.8 `feat/menu-shortcut`: optional global shortcut that opens the menu bar list itself; same validation and conflict rules as the other shortcuts. **Manual**
+  - Verified automatically: persistence test; app builds. All three shortcuts now refuse a duplicate of each other (Core validator, covered by tests).
+  - **Manual:** Settings > Shortcuts > "Open menu bar list": record e.g. Ctrl-Opt-M. Pressing it from any app opens the menu bar menu under the icon, as if clicked; Escape or clicking away closes it. Refused when equal to the other two shortcuts or a system one.
 - [ ] 5.9 `feat/history-copy-button`: a Copy button beside Delete in the History window: Recopy (the Clip becomes the most recent and goes on the pasteboard) and close the window. **Manual**
 - [ ] 5.10 `feat/latest-clip-dot`: a dot marks the most recently used Clip in the History window. **Manual**
 

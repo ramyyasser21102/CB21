@@ -18,6 +18,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let service = CaptureService.shared
         service.start()
-        statusMenu = StatusMenuController(service: service)
+        let statusMenu = StatusMenuController(service: service)
+        service.openMenu = { [weak statusMenu] in statusMenu?.openMenu() }
+        self.statusMenu = statusMenu
     }
 }

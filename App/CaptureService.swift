@@ -12,6 +12,9 @@ final class CaptureService {
     private let hotKeys = GlobalHotKeys()
     private var historyHotKeyID: UInt32?
     private var pauseHotKeyID: UInt32?
+    private var menuHotKeyID: UInt32?
+    /// Opens the menu bar menu. Set by the app once the status item exists.
+    var openMenu: (() -> Void)?
     private(set) var store: ClipStore?
     private(set) var engine: CaptureEngine?
     private(set) var recoveredFrom: URL?
@@ -38,25 +41,38 @@ final class CaptureService {
     /// Binds (or, with nil, clears) the global shortcut that toggles the History window.
     /// Returns a message to show when the shortcut was refused.
     func setHistoryShortcut(_ shortcut: Shortcut?) -> String? {
-        setShortcut(shortcut, current: settings.values.historyShortcut, other: settings.values.pauseShortcut,
+        setShortcut(shortcut, current: settings.values.historyShortcut,
+                    others: [settings.values.pauseShortcut, settings.values.menuShortcut],
                     id: \.historyHotKeyID, register: registerHistory) { $0.historyShortcut = shortcut }
     }
 
     /// Binds (or, with nil, clears) the global shortcut that pauses or resumes capture.
     func setPauseShortcut(_ shortcut: Shortcut?) -> String? {
-        setShortcut(shortcut, current: settings.values.pauseShortcut, other: settings.values.historyShortcut,
+        setShortcut(shortcut, current: settings.values.pauseShortcut,
+                    others: [settings.values.historyShortcut, settings.values.menuShortcut],
                     id: \.pauseHotKeyID, register: registerPause) { $0.pauseShortcut = shortcut }
+    }
+
+    /// Binds (or, with nil, clears) the global shortcut that opens the menu bar list.
+    func setMenuShortcut(_ shortcut: Shortcut?) -> String? {
+        setShortcut(shortcut, current: settings.values.menuShortcut,
+                    others: [settings.values.historyShortcut, settings.values.pauseShortcut],
+                    id: \.menuHotKeyID, register: registerMenu) { $0.menuShortcut = shortcut }
+    }
+
+    private func registerMenu(_ shortcut: Shortcut) -> UInt32? {
+        hotKeys.register(shortcut) { [weak self] in self?.openMenu?() }
     }
 
     private func setShortcut(
         _ shortcut: Shortcut?,
         current: Shortcut?,
-        other: Shortcut?,
+        others: [Shortcut?],
         id: ReferenceWritableKeyPath<CaptureService, UInt32?>,
         register: (Shortcut) -> UInt32?,
         save: (inout SettingsValues) -> Void
     ) -> String? {
-        if let shortcut, let problem = ShortcutValidator.validate(shortcut, takenByOtherActions: other.map { [$0] } ?? []) {
+        if let shortcut, let problem = ShortcutValidator.validate(shortcut, takenByOtherActions: others.compactMap { $0 }) {
             return Self.message(for: problem)
         }
         if let previous = self[keyPath: id] { hotKeys.unregister(previous) }
@@ -171,6 +187,9 @@ final class CaptureService {
             }
             if let saved = settings.values.pauseShortcut {
                 pauseHotKeyID = registerPause(saved)
+            }
+            if let saved = settings.values.menuShortcut {
+                menuHotKeyID = registerMenu(saved)
             }
             let model = self.model
             if opened.recoveredFrom != nil { model.post(.databaseRecovered) }
