@@ -78,3 +78,32 @@ func textClip(_ s: String, at time: TimeInterval = 0) -> Clip {
     #expect(try await store.capture(textClip("B", at: 3)) == .duplicate)
     #expect(try await store.count() == 2)
 }
+
+@Test func recopyMovesTheClipToTheTopWithoutAddingOne() async throws {
+    let store = try ClipStore.inMemory()
+    let a = textClip("A", at: 1)
+    let b = textClip("B", at: 2)
+    _ = try await store.capture(a)
+    _ = try await store.capture(b)
+    try await store.recopy(id: a.id, at: Date(timeIntervalSince1970: 5))
+    let clips = try await store.list()
+    #expect(clips.map(\.id) == [a.id, b.id])
+    #expect(clips.first?.lastUsedAt == Date(timeIntervalSince1970: 5))
+    #expect(clips.first?.createdAt == Date(timeIntervalSince1970: 1))
+}
+
+@Test func recopiedClipBecomesTheDuplicateReference() async throws {
+    let store = try ClipStore.inMemory()
+    let a = textClip("A", at: 1)
+    _ = try await store.capture(a)
+    _ = try await store.capture(textClip("B", at: 2))
+    try await store.recopy(id: a.id, at: Date(timeIntervalSince1970: 5))
+    #expect(try await store.capture(textClip("A", at: 6)) == .duplicate)
+}
+
+@Test func recopyOfAnUnknownClipThrows() async throws {
+    let store = try ClipStore.inMemory()
+    await #expect(throws: StoreError.self) {
+        try await store.recopy(id: UUID(), at: Date())
+    }
+}
