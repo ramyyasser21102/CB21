@@ -323,7 +323,7 @@ public actor ClipStore {
 }
 
 /// The two user-set caps on History.
-public struct Limits: Sendable, Equatable {
+public struct Limits: Sendable, Equatable, Codable {
     public var maxItems: Int
     public var maxBytes: Int
 
