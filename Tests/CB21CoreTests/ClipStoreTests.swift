@@ -107,3 +107,66 @@ func textClip(_ s: String, at time: TimeInterval = 0) -> Clip {
         try await store.recopy(id: UUID(), at: Date())
     }
 }
+
+private func imageClip(_ bytes: [UInt8], at time: TimeInterval = 0) -> Clip {
+    Clip(
+        representations: [Representation(kind: .image, typeIdentifier: "public.png", data: Data(bytes))],
+        createdAt: Date(timeIntervalSince1970: time)
+    )
+}
+
+private func makeTempDir() throws -> URL {
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    return dir
+}
+
+@Test func imageBytesAreStoredAsFilesNotInTheDatabase() async throws {
+    let dir = try makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let images = dir.appendingPathComponent("images")
+    let store = try ClipStore(path: dir.appendingPathComponent("h.sqlite").path, imagesDirectory: images)
+    let clip = imageClip([1, 2, 3, 4])
+    try await store.insert(clip)
+    let files = try FileManager.default.contentsOfDirectory(atPath: images.path)
+    #expect(files.count == 1)
+    #expect(try await store.list() == [clip])
+}
+
+@Test func nonImageRepresentationsStayInTheDatabase() async throws {
+    let dir = try makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let images = dir.appendingPathComponent("images")
+    let store = try ClipStore(path: dir.appendingPathComponent("h.sqlite").path, imagesDirectory: images)
+    try await store.insert(textClip("just text"))
+    let files = (try? FileManager.default.contentsOfDirectory(atPath: images.path)) ?? []
+    #expect(files.isEmpty)
+}
+
+@Test func imageClipsSurviveReopening() async throws {
+    let dir = try makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let images = dir.appendingPathComponent("images")
+    let path = dir.appendingPathComponent("h.sqlite").path
+    let clip = imageClip([9, 8, 7])
+    do {
+        let store = try ClipStore(path: path, imagesDirectory: images)
+        try await store.insert(clip)
+    }
+    let reopened = try ClipStore(path: path, imagesDirectory: images)
+    #expect(try await reopened.list() == [clip])
+}
+
+@Test func clipWhoseImageFileIsMissingIsLeftOutOfTheList() async throws {
+    let dir = try makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let images = dir.appendingPathComponent("images")
+    let store = try ClipStore(path: dir.appendingPathComponent("h.sqlite").path, imagesDirectory: images)
+    try await store.insert(imageClip([1], at: 1))
+    try await store.insert(textClip("ok", at: 2))
+    for name in try FileManager.default.contentsOfDirectory(atPath: images.path) {
+        try FileManager.default.removeItem(at: images.appendingPathComponent(name))
+    }
+    let clips = try await store.list()
+    #expect(clips.count == 1)
+}

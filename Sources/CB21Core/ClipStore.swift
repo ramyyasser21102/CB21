@@ -13,7 +13,11 @@ public actor ClipStore {
     // Only touched on the actor, and in deinit when no other reference exists.
     nonisolated(unsafe) private var db: OpaquePointer?
 
-    public init(path: String) throws {
+    private let imagesDirectory: URL?
+
+    /// - Parameter imagesDirectory: where image bytes are kept as files. When nil, they stay in the database.
+    public init(path: String, imagesDirectory: URL? = nil) throws {
+        self.imagesDirectory = imagesDirectory
         var handle: OpaquePointer?
         guard sqlite3_open(path, &handle) == SQLITE_OK, let handle else {
             let message = handle.map { String(cString: sqlite3_errmsg($0)) } ?? "cannot open database"
@@ -40,6 +44,7 @@ public actor ClipStore {
                     kind TEXT NOT NULL,
                     type_identifier TEXT NOT NULL,
                     data BLOB NOT NULL,
+                    file_name TEXT,
                     PRIMARY KEY (clip_id, position)
                 )
                 """)
@@ -59,6 +64,7 @@ public actor ClipStore {
 
     public func insert(_ clip: Clip) throws {
         let db = try handle()
+        var writtenFiles: [URL] = []
         try Self.execute(db, "BEGIN")
         do {
             try run(db, "INSERT INTO clips VALUES (?, ?, ?, ?, ?)") { stmt in
@@ -69,19 +75,35 @@ public actor ClipStore {
                 sqlite3_bind_int64(stmt, 5, Int64(clip.byteCount))
             }
             for (position, rep) in clip.representations.enumerated() {
-                try run(db, "INSERT INTO representations VALUES (?, ?, ?, ?, ?)") { stmt in
+                var fileName: String?
+                if rep.kind == .image, let imagesDirectory {
+                    try FileManager.default.createDirectory(at: imagesDirectory, withIntermediateDirectories: true)
+                    let name = "\(clip.id.uuidString)-\(position)"
+                    let url = imagesDirectory.appendingPathComponent(name)
+                    try rep.data.write(to: url, options: .atomic)
+                    writtenFiles.append(url)
+                    fileName = name
+                }
+                try run(db, "INSERT INTO representations VALUES (?, ?, ?, ?, ?, ?)") { stmt in
                     sqlite3_bind_text(stmt, 1, clip.id.uuidString, -1, sqliteTransient)
                     sqlite3_bind_int(stmt, 2, Int32(position))
                     sqlite3_bind_text(stmt, 3, rep.kind.rawValue, -1, sqliteTransient)
                     sqlite3_bind_text(stmt, 4, rep.typeIdentifier, -1, sqliteTransient)
-                    _ = rep.data.withUnsafeBytes { bytes in
+                    let inline = fileName == nil ? rep.data : Data()
+                    _ = inline.withUnsafeBytes { bytes in
                         sqlite3_bind_blob(stmt, 5, bytes.baseAddress, Int32(bytes.count), sqliteTransient)
+                    }
+                    if let fileName {
+                        sqlite3_bind_text(stmt, 6, fileName, -1, sqliteTransient)
+                    } else {
+                        sqlite3_bind_null(stmt, 6)
                     }
                 }
             }
             try Self.execute(db, "COMMIT")
         } catch {
             try? Self.execute(db, "ROLLBACK")
+            for url in writtenFiles { try? FileManager.default.removeItem(at: url) }
             throw error
         }
     }
@@ -110,18 +132,30 @@ public actor ClipStore {
                 Date(timeIntervalSince1970: sqlite3_column_double(stmt, 2))
             ))
         }
-        return try rows.map { row in
+        return try rows.compactMap { row -> Clip? in
+            var missingFile = false
             var reps: [Representation] = []
-            try query(db, "SELECT kind, type_identifier, data FROM representations WHERE clip_id = ? ORDER BY position",
+            try query(db, "SELECT kind, type_identifier, data, file_name FROM representations WHERE clip_id = ? ORDER BY position",
                       bind: { sqlite3_bind_text($0, 1, row.id.uuidString, -1, sqliteTransient) }) { stmt in
-                let count = Int(sqlite3_column_bytes(stmt, 2))
-                let data = count == 0 ? Data() : Data(bytes: sqlite3_column_blob(stmt, 2), count: count)
+                var data: Data
+                if let file = sqlite3_column_text(stmt, 3), let imagesDirectory {
+                    let url = imagesDirectory.appendingPathComponent(String(cString: file))
+                    guard let contents = try? Data(contentsOf: url) else {
+                        missingFile = true
+                        return
+                    }
+                    data = contents
+                } else {
+                    let count = Int(sqlite3_column_bytes(stmt, 2))
+                    data = count == 0 ? Data() : Data(bytes: sqlite3_column_blob(stmt, 2), count: count)
+                }
                 reps.append(Representation(
                     kind: Representation.Kind(rawValue: String(cString: sqlite3_column_text(stmt, 0)))!,
                     typeIdentifier: String(cString: sqlite3_column_text(stmt, 1)),
                     data: data
                 ))
             }
+            if missingFile || reps.isEmpty { return nil }
             return Clip(id: row.id, representations: reps, createdAt: row.created, lastUsedAt: row.used)
         }
     }
