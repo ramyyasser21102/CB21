@@ -35,7 +35,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 2.5 `feat/image-files`: image bytes saved as files beside the database, metadata in SQLite (preview thumbnails come with 3.3).
 - [x] 2.6 `feat/delete-clips`: delete one, several or all Clips, removing rows and image files.
 - [x] 2.7 `feat/limits-eviction`: item and storage Limits, least recently used evicted first, lowering a Limit trims.
-- [ ] 2.8 `feat/oversized-clip`: a Clip larger than the storage Limit is rejected with a reason.
+- [x] 2.8 `feat/oversized-clip`: a Clip larger than the storage Limit is rejected with a reason.
 - [ ] 2.9 `feat/orphan-sweep`: startup removes image files with no row.
 - [ ] 2.10 `feat/corrupt-db-recovery`: unreadable database moved aside under a timestamped name, new empty History, notice flag set.
 
