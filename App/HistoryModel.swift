@@ -14,7 +14,12 @@ final class HistoryModel {
 
     static let menuLimit = 10
 
+    /// Every Clip in History, most recently used first.
     private(set) var rows: [Row] = []
+    private var thumbnails: [UUID: NSImage] = [:]
+
+    /// The latest Clips, as shown in the menu.
+    var menuRows: [Row] { Array(rows.prefix(Self.menuLimit)) }
     private(set) var pasteboardAccessDenied = false
 
     /// One-time messages shown at the top of the menu until dismissed.
@@ -39,8 +44,13 @@ final class HistoryModel {
 
     func refresh(from store: ClipStore) async {
         guard let clips = try? await store.list() else { return }
-        rows = clips.prefix(Self.menuLimit).map { clip in
-            Row(id: clip.id, preview: clip.preview, thumbnail: Self.thumbnail(for: clip))
+        let live = Set(clips.map(\.id))
+        thumbnails = thumbnails.filter { live.contains($0.key) }
+        rows = clips.map { clip in
+            if thumbnails[clip.id] == nil, let thumb = Self.thumbnail(for: clip) {
+                thumbnails[clip.id] = thumb
+            }
+            return Row(id: clip.id, preview: clip.preview, thumbnail: thumbnails[clip.id])
         }
     }
 

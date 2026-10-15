@@ -11,7 +11,11 @@ struct CB21App: App {
 
     var body: some Scene {
         MenuBarExtra("cb21", systemImage: "doc.on.clipboard") {
-            MenuContent(model: service.model, recopy: { id in service.recopy(id: id) })
+            MenuContent(
+                model: service.model,
+                recopy: { id in service.recopy(id: id) },
+                openHistory: { HistoryWindowController.shared.show(service: service) }
+            )
         }
     }
 }
@@ -19,6 +23,7 @@ struct CB21App: App {
 struct MenuContent: View {
     let model: HistoryModel
     let recopy: (UUID) -> Void
+    let openHistory: () -> Void
 
     var body: some View {
         if model.pasteboardAccessDenied {
@@ -38,11 +43,12 @@ struct MenuContent: View {
         if model.rows.isEmpty {
             Text("No clips yet").disabled(true)
         } else {
-            ForEach(model.rows) { row in
-                Button { recopy(row.id) } label: { label(for: row) }
+            ForEach(model.menuRows) { row in
+                Button { recopy(row.id) } label: { ClipLabel(row: row) }
             }
         }
         Divider()
+        Button("Open history…", action: openHistory)
         Button("Quit cb21") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
     }
@@ -53,9 +59,14 @@ struct MenuContent: View {
         case .databaseRecovered: "History was damaged and has been reset; the old file was kept"
         }
     }
+}
+
+/// One Clip's preview line, shared by the menu and the History window.
+struct ClipLabel: View {
+    let row: HistoryModel.Row
 
     @ViewBuilder
-    private func label(for row: HistoryModel.Row) -> some View {
+    var body: some View {
         switch row.preview {
         case .text(let text):
             Text(text)
