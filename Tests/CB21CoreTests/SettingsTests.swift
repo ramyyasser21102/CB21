@@ -63,3 +63,30 @@ private func freshDefaults() -> UserDefaults {
     SettingsPersistence(defaults: defaults).save(values)
     #expect(SettingsPersistence(defaults: defaults).load().menuShortcut == values.menuShortcut)
 }
+
+@Test func welcomeIsNotCompletedByDefaultAndPersistsOnceDone() {
+    #expect(SettingsValues().welcomeCompleted == false)
+    let defaults = freshDefaults()
+    var values = SettingsValues()
+    values.welcomeCompleted = true
+    SettingsPersistence(defaults: defaults).save(values)
+    #expect(SettingsPersistence(defaults: defaults).load().welcomeCompleted)
+}
+
+@Test func settingsSavedBeforeTheWelcomeExistedLoadAsNotCompleted() {
+    let defaults = freshDefaults()
+    defaults.set(Data(#"{"limits":{"maxItems":10,"maxBytes":2048}}"#.utf8), forKey: SettingsPersistence.key)
+    let loaded = SettingsPersistence(defaults: defaults).load()
+    #expect(loaded.welcomeCompleted == false)
+    #expect(loaded.limits == Limits(maxItems: 10, maxBytes: 2048))
+}
+
+@Test func otherSettingsSurviveCompletingTheWelcome() {
+    let defaults = freshDefaults()
+    var values = SettingsValues()
+    values.historyShortcut = Shortcut(keyCode: 9, modifiers: [.command, .shift])
+    values.limits = Limits(maxItems: 5, maxBytes: 1000)
+    values.welcomeCompleted = true
+    SettingsPersistence(defaults: defaults).save(values)
+    #expect(SettingsPersistence(defaults: defaults).load() == values)
+}
