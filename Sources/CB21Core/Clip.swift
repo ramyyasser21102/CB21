@@ -29,18 +29,22 @@ public struct Clip: Sendable, Equatable, Identifiable {
     public let representations: [Representation]
     public let createdAt: Date
     public var lastUsedAt: Date
+    /// The app that was in front when this Clip was captured, when known.
+    public let sourceAppName: String?
 
     public init(
         id: UUID = UUID(),
         representations: [Representation],
         createdAt: Date = Date(),
-        lastUsedAt: Date? = nil
+        lastUsedAt: Date? = nil,
+        sourceAppName: String? = nil
     ) {
         precondition(!representations.isEmpty, "A Clip needs at least one Representation")
         self.id = id
         self.representations = representations
         self.createdAt = createdAt
         self.lastUsedAt = lastUsedAt ?? createdAt
+        self.sourceAppName = sourceAppName
     }
 
     /// The Representation that stands for the Clip when comparing and previewing.

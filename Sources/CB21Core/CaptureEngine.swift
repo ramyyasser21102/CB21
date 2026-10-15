@@ -12,11 +12,14 @@ public struct PasteboardSnapshot: Sendable, Equatable {
     public let changeCount: Int
     public let markers: Set<String>
     public let representations: [Representation]
+    /// The app in front when the change was noticed. It can lag the copy by up to one poll interval.
+    public let sourceAppName: String?
 
-    public init(changeCount: Int, markers: Set<String>, representations: [Representation]) {
+    public init(changeCount: Int, markers: Set<String>, representations: [Representation], sourceAppName: String? = nil) {
         self.changeCount = changeCount
         self.markers = markers
         self.representations = representations
+        self.sourceAppName = sourceAppName
     }
 }
 
@@ -79,7 +82,7 @@ public actor CaptureEngine {
         if snapshot.markers.contains(PasteboardMarker.transient) { return .skipped(.transient) }
         guard !snapshot.representations.isEmpty else { return .empty }
 
-        let clip = Clip(representations: snapshot.representations, createdAt: now)
+        let clip = Clip(representations: snapshot.representations, createdAt: now, sourceAppName: snapshot.sourceAppName)
         return .captured(try await store.capture(clip))
     }
 

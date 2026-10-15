@@ -10,13 +10,14 @@ final class FakePasteboard: PasteboardReading, @unchecked Sendable {
 
     var changeCount: Int { lock.withLock { _changeCount } }
 
-    func copy(_ text: String, markers: Set<String> = []) {
+    func copy(_ text: String, markers: Set<String> = [], from sourceApp: String? = nil) {
         lock.withLock {
             _changeCount += 1
             current = PasteboardSnapshot(
                 changeCount: _changeCount,
                 markers: markers,
-                representations: [Representation(kind: .plainText, typeIdentifier: "public.utf8-plain-text", data: Data(text.utf8))]
+                representations: [Representation(kind: .plainText, typeIdentifier: "public.utf8-plain-text", data: Data(text.utf8))],
+                sourceAppName: sourceApp
             )
         }
     }
@@ -191,4 +192,33 @@ private let t0 = Date(timeIntervalSince1970: 1_000_000)
     await engine.pause(.untilResumed, now: t0.addingTimeInterval(2))
     try await engine.recopy(id: a.id, now: t0.addingTimeInterval(3))
     #expect(try await store.list().first?.id == a.id)
+}
+
+
+@Test func capturedClipRecordsTheSourceApp() async throws {
+    let pb = FakePasteboard()
+    let (engine, store) = try makeEngine(pb)
+    pb.copy("from safari", from: "Safari")
+    _ = try await engine.poll()
+    #expect(try await store.list().first?.sourceAppName == "Safari")
+}
+
+@Test func clipWithoutAKnownSourceAppHasNone() async throws {
+    let pb = FakePasteboard()
+    let (engine, store) = try makeEngine(pb)
+    pb.copy("mystery")
+    _ = try await engine.poll()
+    #expect(try await store.list().first?.sourceAppName == nil)
+}
+
+@Test func recopyKeepsTheOriginalSourceApp() async throws {
+    let pb = FakePasteboard()
+    let (engine, store) = try makeEngine(pb)
+    pb.copy("A", from: "Notes")
+    _ = try await engine.poll()
+    pb.copy("B", from: "Mail")
+    _ = try await engine.poll()
+    let a = try await store.list().last!
+    try await engine.recopy(id: a.id)
+    #expect(try await store.list().first?.sourceAppName == "Notes")
 }

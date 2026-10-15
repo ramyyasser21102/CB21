@@ -28,7 +28,12 @@ final class SystemPasteboard: PasteboardReading, @unchecked Sendable {
                 representations.append(Representation(kind: kind, typeIdentifier: type.rawValue, data: data))
             }
         }
-        return PasteboardSnapshot(changeCount: pasteboard.changeCount, markers: markers, representations: representations)
+        return PasteboardSnapshot(
+            changeCount: pasteboard.changeCount,
+            markers: markers,
+            representations: representations,
+            sourceAppName: NSWorkspace.shared.frontmostApplication?.localizedName
+        )
     }
 
     func write(_ clip: Clip) -> Int {

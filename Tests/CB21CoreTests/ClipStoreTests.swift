@@ -230,3 +230,19 @@ private func makeTempDir() throws -> URL {
     let store = try ClipStore.inMemory()
     #expect(try await store.sweepOrphanedImageFiles() == 0)
 }
+
+
+@Test func sourceAppSurvivesTheDatabase() async throws {
+    let store = try ClipStore.inMemory()
+    let withSource = Clip(
+        representations: [Representation(kind: .plainText, typeIdentifier: "public.utf8-plain-text", data: Data("x".utf8))],
+        createdAt: Date(timeIntervalSince1970: 2),
+        sourceAppName: "Xcode"
+    )
+    let without = textClip("y", at: 1)
+    try await store.insert(withSource)
+    try await store.insert(without)
+    let back = try await store.list()
+    #expect(back == [withSource, without])
+    #expect(back.map(\.sourceAppName) == ["Xcode", nil])
+}
