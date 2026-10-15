@@ -99,7 +99,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 5.9 `feat/history-copy-button`: a Copy button beside Delete in the History window: Recopy (the Clip becomes the most recent and goes on the pasteboard) and close the window. **Manual**
   - Verified automatically: Recopy ordering and not re-capturing are Core tests; app builds.
   - **Manual:** each row has a Copy button (two-pages icon) left of the trash. Clicking it closes the window, focus returns to the app you came from, and pasting there pastes that Clip. Reopen the window: the Clip is at the top and not duplicated. Double-click does the same.
-- [ ] 5.10 `feat/latest-clip-dot`: a dot marks the most recently used Clip in the History window. **Manual**
+- [x] 5.10 `feat/latest-clip-dot`: a dot marks the most recently used Clip in the History window. **Manual**
+  - Verified automatically: builds. Interpretation: the dot sits on the top row, the most recently used Clip, which is also the one you last copied or Recopied.
+  - **Manual:** a small accent-colored dot appears left of the first row only. Copy something new, or press Copy on an older Clip: the dot follows the Clip to the top.
 
 ## Phase 6 — Release
 

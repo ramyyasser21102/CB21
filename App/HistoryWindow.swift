@@ -63,6 +63,13 @@ struct HistoryView: View {
         } else {
             List(model.rows, selection: $selection) { row in
                 HStack {
+                    Image(systemName: "circle.fill")
+                        .font(.system(size: 7))
+                        .foregroundStyle(Color.accentColor)
+                        .opacity(row.id == model.rows.first?.id ? 1 : 0)
+                        .help("Most recent clip")
+                        .accessibilityHidden(row.id != model.rows.first?.id)
+                        .accessibilityLabel("Most recent")
                     ClipLabel(row: row).lineLimit(1)
                     Spacer()
                     Button {
