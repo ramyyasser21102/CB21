@@ -130,3 +130,65 @@ private func makeEngine(_ pasteboard: FakePasteboard) throws -> (CaptureEngine, 
     #expect(order.first == a.id)
     #expect(order.count == 2)
 }
+
+private let t0 = Date(timeIntervalSince1970: 1_000_000)
+
+@Test func copiesWhilePausedAreSkippedAndNeverStored() async throws {
+    let pb = FakePasteboard()
+    let (engine, store) = try makeEngine(pb)
+    await engine.pause(.untilResumed, now: t0)
+    pb.copy("secret")
+    #expect(try await engine.poll(now: t0.addingTimeInterval(1)) == .skipped(.paused))
+    #expect(try await store.count() == 0)
+    #expect(try await engine.poll(now: t0.addingTimeInterval(2)) == .unchanged)
+}
+
+@Test func timedPauseEndsOnItsOwn() async throws {
+    let pb = FakePasteboard()
+    let (engine, store) = try makeEngine(pb)
+    await engine.pause(.minutes(5), now: t0)
+    #expect(await engine.isPaused(at: t0.addingTimeInterval(299)))
+    #expect(!(await engine.isPaused(at: t0.addingTimeInterval(300))))
+    pb.copy("after")
+    #expect(try await engine.poll(now: t0.addingTimeInterval(301)) == .captured(.stored))
+    #expect(try await store.count() == 1)
+}
+
+@Test func untilResumedPauseNeverExpiresOnItsOwn() async throws {
+    let (engine, _) = try makeEngine(FakePasteboard())
+    await engine.pause(.untilResumed, now: t0)
+    #expect(await engine.isPaused(at: t0.addingTimeInterval(86_400 * 30)))
+}
+
+@Test func resumeEndsPauseButEarlierSkippedCopiesStayGone() async throws {
+    let pb = FakePasteboard()
+    let (engine, store) = try makeEngine(pb)
+    await engine.pause(.untilResumed, now: t0)
+    pb.copy("secret")
+    _ = try await engine.poll(now: t0.addingTimeInterval(1))
+    await engine.resume()
+    #expect(try await engine.poll(now: t0.addingTimeInterval(2)) == .unchanged)
+    pb.copy("normal")
+    #expect(try await engine.poll(now: t0.addingTimeInterval(3)) == .captured(.stored))
+    #expect(try await store.count() == 1)
+}
+
+@Test func aNewEngineStartsUnpausedBecauseStateIsNeverSaved() async throws {
+    let first = try makeEngine(FakePasteboard()).0
+    await first.pause(.untilResumed, now: t0)
+    let second = try makeEngine(FakePasteboard()).0
+    #expect(!(await second.isPaused(at: t0)))
+}
+
+@Test func recopyStillWorksWhilePaused() async throws {
+    let pb = FakePasteboard()
+    let (engine, store) = try makeEngine(pb)
+    pb.copy("A")
+    _ = try await engine.poll(now: t0)
+    pb.copy("B")
+    _ = try await engine.poll(now: t0.addingTimeInterval(1))
+    let a = try await store.list().last!
+    await engine.pause(.untilResumed, now: t0.addingTimeInterval(2))
+    try await engine.recopy(id: a.id, now: t0.addingTimeInterval(3))
+    #expect(try await store.list().first?.id == a.id)
+}

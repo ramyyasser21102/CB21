@@ -32,6 +32,12 @@ public enum SkipReason: Sendable, Equatable {
     case concealed
     case transient
     case ownWrite
+    case paused
+}
+
+public enum PauseDuration: Sendable, Equatable {
+    case minutes(Int)
+    case untilResumed
 }
 
 public enum PollOutcome: Sendable, Equatable {
@@ -48,6 +54,8 @@ public actor CaptureEngine {
     private let store: ClipStore
     private var lastSeenChangeCount: Int
     private var ownWriteChangeCount: Int?
+    /// nil: not paused. `.distantFuture`: paused until resumed. Never saved, so a restart always captures.
+    private var pausedUntil: Date?
 
     /// Content already on the pasteboard at start is not captured.
     public init(pasteboard: any PasteboardReading, store: ClipStore) {
@@ -65,6 +73,7 @@ public actor CaptureEngine {
             ownWriteChangeCount = nil
             return .skipped(.ownWrite)
         }
+        if isPaused(at: now) { return .skipped(.paused) }
         let snapshot = pasteboard.snapshot()
         if snapshot.markers.contains(PasteboardMarker.concealed) { return .skipped(.concealed) }
         if snapshot.markers.contains(PasteboardMarker.transient) { return .skipped(.transient) }
@@ -72,6 +81,22 @@ public actor CaptureEngine {
 
         let clip = Clip(representations: snapshot.representations, createdAt: now)
         return .captured(try await store.capture(clip))
+    }
+
+    public func pause(_ duration: PauseDuration, now: Date = Date()) {
+        switch duration {
+        case .minutes(let n): pausedUntil = now.addingTimeInterval(TimeInterval(n * 60))
+        case .untilResumed: pausedUntil = .distantFuture
+        }
+    }
+
+    public func resume() {
+        pausedUntil = nil
+    }
+
+    public func isPaused(at now: Date = Date()) -> Bool {
+        guard let pausedUntil else { return false }
+        return now < pausedUntil
     }
 
     /// Puts a Clip back on the pasteboard and moves it to the top of History without capturing it again.
