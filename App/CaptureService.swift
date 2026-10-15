@@ -30,6 +30,15 @@ final class CaptureService {
         }
     }
 
+    /// Permanently deletes Clips from History and disk.
+    func delete(ids: Set<UUID>) {
+        guard let store, !ids.isEmpty else { return }
+        Task {
+            try? await store.delete(ids: Array(ids))
+            await model.refresh(from: store)
+        }
+    }
+
     func start() {
         guard task == nil else { return }
         let dir = Self.dataDirectory

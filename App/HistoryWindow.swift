@@ -13,7 +13,8 @@ final class HistoryWindowController {
         if window == nil {
             let hosting = NSHostingController(rootView: HistoryView(
                 model: service.model,
-                recopy: { service.recopy(id: $0) }
+                recopy: { service.recopy(id: $0) },
+                delete: { service.delete(ids: $0) }
             ))
             let window = NSWindow(contentViewController: hosting)
             window.title = "cb21 History"
@@ -40,6 +41,7 @@ final class HistoryWindowController {
 struct HistoryView: View {
     let model: HistoryModel
     let recopy: (UUID) -> Void
+    let delete: (Set<UUID>) -> Void
     @State private var selection = Set<UUID>()
 
     var body: some View {
@@ -48,12 +50,28 @@ struct HistoryView: View {
                                    description: Text("Things you copy will show up here."))
         } else {
             List(model.rows, selection: $selection) { row in
-                ClipLabel(row: row).lineLimit(1)
+                HStack {
+                    ClipLabel(row: row).lineLimit(1)
+                    Spacer()
+                    Button {
+                        remove([row.id])
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Delete this clip")
+                }
             }
+            .onDeleteCommand { remove(selection) }
             .contextMenu(forSelectionType: UUID.self) { _ in
             } primaryAction: { ids in
                 if let id = ids.first { recopy(id) }
             }
         }
+    }
+
+    private func remove(_ ids: Set<UUID>) {
+        delete(ids)
+        selection.subtract(ids)
     }
 }
