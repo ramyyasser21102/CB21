@@ -48,7 +48,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [~] 3.4 `feat/menu-history`: menu lists the 10 most recent Clips; clicking a Clip Recopies it. **Manual**
   - Verified automatically: builds, launches, capture feeds the model. The real menu could not be read (no assistive access for the agent).
   - **Manual:** run the Debug build, copy 3 or 4 different things (text, a link, an image, a file in Finder). Open the menu: newest first, text truncated, link and file icons, image thumbnail. Click an older item, paste somewhere: it pastes, moves to the top and does not appear twice.
-- [ ] 3.5 `feat/pasteboard-access-notice`: first-launch message and System Settings link when access is denied. **Manual**
+- [~] 3.5 `feat/pasteboard-access-notice`: first-launch message and System Settings link when access is denied. **Manual**
+  - Verified automatically: builds. The denied state needs macOS 15.4 or later (`accessBehavior`), checked with `#available`; the System Settings link opens the general Privacy & Security pane.
+  - **Manual:** in System Settings > Privacy & Security > "Paste from Other Apps", set cb21 to Deny (it appears after cb21 first reads the clipboard). The menu should show "cb21 can't read the clipboard" with a working Settings link. Setting it back to Allow should clear the message within a second.
 - [ ] 3.6 `feat/db-notice`: one-time notices for oversized Clips and database recovery in the menu. **Manual**
 
 ## Phase 4 — History window and deletion
