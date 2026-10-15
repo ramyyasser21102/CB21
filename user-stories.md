@@ -31,6 +31,7 @@ As a user, I want a menu bar icon that lists recent copies, so I can paste an ol
 - Previews: first line of text truncated to about 60 characters; a thumbnail for images; the file name for files; the URL for links; rich text shows its plain text.
 - Clicking a Clip Recopies it. It moves to the top of History and is not captured again.
 - The menu shows "Open history…", the Pause item (CB-6), "Clear all" and "Settings…".
+- An optional global shortcut opens this menu from any app (see CB-3).
 - On first launch, if pasteboard access is denied, the menu shows a short message linking to the System Settings pane.
 - If the database can't be opened, the old file is moved aside under a timestamped name, History starts empty, and the menu shows a one-time notice.
 
@@ -40,6 +41,7 @@ As a user, I want to bind my own shortcut to open the history, so I don't need t
 
 - Settings has a shortcut recorder.
 - The shortcut toggles the History window from any app.
+- A second optional shortcut opens the menu bar list itself, and a third pauses or resumes capture (CB-6). All three are unbound by default and may not equal each other.
 - Shortcuts without a modifier key (Cmd, Ctrl or Opt) are rejected, and so are known system shortcuts. Settings states that conflicts with other apps can't be detected.
 - The default is unbound, and the user can reset it to unbound.
 
@@ -49,6 +51,8 @@ As a user, I want to delete one, several, or all items, so I can remove sensitiv
 
 - The History window lists the full History.
 - Single delete: per-Clip action (button or Delete key).
+- Each row also has a Copy button: it puts the Clip on the pasteboard, makes it the most recent, and closes the window so the user can paste.
+- A dot marks the most recently used Clip.
 - Multi-select: Shift/Cmd-click, then delete.
 - Clear all asks for confirmation.
 - Deletion is permanent. Database rows are removed with SQLite `secure_delete` on, and image files are deleted immediately.
@@ -76,7 +80,7 @@ As a user, I want to pause capture, so I can copy sensitive data that cb21 would
 ## Settings
 
 A single pane with three sections:
-- Shortcuts: History shortcut (CB-3), Pause shortcut (CB-6).
+- Shortcuts: History window, menu bar list (CB-3), Pause (CB-6).
 - History: the two Limits (CB-5) and the Clear all text.
 - General: launch at login, off by default.
 
