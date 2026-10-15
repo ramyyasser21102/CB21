@@ -53,6 +53,11 @@ struct SettingsView: View {
                     shortcut: settings.values.historyShortcut,
                     onChange: { service.setHistoryShortcut($0) }
                 )
+                ShortcutRecorder(
+                    title: "Pause / resume capture",
+                    shortcut: settings.values.pauseShortcut,
+                    onChange: { service.setPauseShortcut($0) }
+                )
             }
             Section {
                 TextField("Keep at most (clips)", value: $maxItems, format: .number)

@@ -82,7 +82,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
   - Verified automatically: settings persistence tests; a standalone Carbon test confirmed registering the same hotkey twice is refused (the basis of the conflict warning); app builds.
   - **Manual:** Settings > Shortcuts > "Open history": click, press e.g. Ctrl-Opt-V. It shows as ⌃⌥V and pressing it from any app toggles the History window. Try: no modifier (refused), Cmd-Space (refused), a shortcut another app already uses (refused with a message, old one stays). Reset clears it. The shortcut survives relaunch.
 - [x] 5.5 `feat/pause-core`: Pause state with 5, 15 minute and until-resumed timers, always cleared at restart (in Core, tested).
-- [ ] 5.6 `feat/pause-ui`: menu item, distinct icon state and Pause shortcut. **Manual**
+- [x] 5.6 `feat/pause-ui`: menu item, distinct icon state and Pause shortcut. **Manual**
+  - Verified automatically: Pause rules (skip, timers, resume, restart, Recopy while paused) are Core tests; app builds and launches. The menu, icon and hotkey need your hands.
+  - **Manual:** menu > "Pause capture" offers 5 min, 15 min and until resumed; while paused the icon changes to a pause symbol and the menu shows "Resume capture". Copy something while paused: it must not appear in History, before or after resuming. A 5-minute pause ends by itself (try it, or trust the Core test). Quit and relaunch while paused: capturing again. Settings > "Pause / resume capture" shortcut toggles pause from any app; it is refused if it equals the History shortcut.
 
 ## Phase 6 — Release
 
