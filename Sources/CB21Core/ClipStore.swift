@@ -1,9 +1,12 @@
 import Foundation
 import SQLite3
 
-public struct StoreError: Error, CustomStringConvertible {
+public struct StoreError: Error, Equatable, CustomStringConvertible {
     public let message: String
     public var description: String { message }
+
+    /// The database was written by a newer cb21. It is healthy, so it must not be reset.
+    public static let newerDatabase = StoreError(message: "the database was created by a newer version of cb21")
 }
 
 private let sqliteTransient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
@@ -50,10 +53,58 @@ public actor ClipStore {
                     PRIMARY KEY (clip_id, position)
                 )
                 """)
+            try Self.migrate(handle)
         } catch {
             sqlite3_close(handle)
             throw error
         }
+    }
+
+    /// The schema version this build writes. Bump it and add a case to `migrationSteps` to change the schema.
+    static let latestSchemaVersion = 1
+
+    /// Steps that bring an older database up to `latestSchemaVersion`. Index 0 takes version 0 to 1.
+    private static let migrationSteps: [String] = [
+        "ALTER TABLE clips ADD COLUMN source_app_name TEXT",
+    ]
+
+    private static func migrate(_ db: OpaquePointer) throws {
+        var current = 0
+        var stmt: OpaquePointer?
+        if sqlite3_prepare_v2(db, "PRAGMA user_version", -1, &stmt, nil) == SQLITE_OK, sqlite3_step(stmt) == SQLITE_ROW {
+            current = Int(sqlite3_column_int(stmt, 0))
+        }
+        sqlite3_finalize(stmt)
+        if current > latestSchemaVersion { throw StoreError.newerDatabase }
+        for version in current..<latestSchemaVersion {
+            try execute(db, "BEGIN")
+            do {
+                try execute(db, migrationSteps[version])
+                try execute(db, "PRAGMA user_version = \(version + 1)")
+                try execute(db, "COMMIT")
+            } catch {
+                try? execute(db, "ROLLBACK")
+                throw error
+            }
+        }
+    }
+
+    func schemaVersion() throws -> Int {
+        var n = -1
+        try query(try handle(), "PRAGMA user_version") { n = Int(sqlite3_column_int($0, 0)) }
+        return n
+    }
+
+    func hasColumn(_ column: String, in table: String) throws -> Bool {
+        var found = false
+        try query(try handle(), "PRAGMA table_info(\(table))") {
+            if String(cString: sqlite3_column_text($0, 1)) == column { found = true }
+        }
+        return found
+    }
+
+    func setSchemaVersionForTesting(_ version: Int) throws {
+        try Self.execute(try handle(), "PRAGMA user_version = \(version)")
     }
 
     public static func inMemory(limits: Limits = .default) throws -> ClipStore {
@@ -69,9 +120,13 @@ public actor ClipStore {
         now: Date = Date()
     ) throws -> (store: ClipStore, recoveredFrom: URL?) {
         if FileManager.default.fileExists(atPath: url.path) {
-            if let store = try? ClipStore(path: url.path, imagesDirectory: imagesDirectory, limits: limits),
-               store.isIntact() {
-                return (store, nil)
+            do {
+                let store = try ClipStore(path: url.path, imagesDirectory: imagesDirectory, limits: limits)
+                if store.isIntact() { return (store, nil) }
+            } catch let error as StoreError where error == .newerDatabase {
+                throw error
+            } catch {
+                // Unreadable: fall through and set it aside below.
             }
             let stamp = ISO8601DateFormatter().string(from: now).replacingOccurrences(of: ":", with: "-")
             let base = url.deletingPathExtension().lastPathComponent
@@ -106,7 +161,7 @@ public actor ClipStore {
         var writtenFiles: [URL] = []
         try Self.execute(db, "BEGIN")
         do {
-            try run(db, "INSERT INTO clips VALUES (?, ?, ?, ?, ?)") { stmt in
+            try run(db, "INSERT INTO clips (id, content_key, created_at, last_used_at, byte_count) VALUES (?, ?, ?, ?, ?)") { stmt in
                 sqlite3_bind_text(stmt, 1, clip.id.uuidString, -1, sqliteTransient)
                 sqlite3_bind_text(stmt, 2, clip.contentKey, -1, sqliteTransient)
                 sqlite3_bind_double(stmt, 3, clip.createdAt.timeIntervalSince1970)
@@ -123,7 +178,7 @@ public actor ClipStore {
                     writtenFiles.append(url)
                     fileName = name
                 }
-                try run(db, "INSERT INTO representations VALUES (?, ?, ?, ?, ?, ?)") { stmt in
+                try run(db, "INSERT INTO representations (clip_id, position, kind, type_identifier, data, file_name) VALUES (?, ?, ?, ?, ?, ?)") { stmt in
                     sqlite3_bind_text(stmt, 1, clip.id.uuidString, -1, sqliteTransient)
                     sqlite3_bind_int(stmt, 2, Int32(position))
                     sqlite3_bind_text(stmt, 3, rep.kind.rawValue, -1, sqliteTransient)

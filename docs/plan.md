@@ -121,7 +121,8 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 Order: the stored facts first (7.1–7.3), then the logic in Core (7.4), then the screens (7.5–7.7).
 
-- [ ] 7.1 `feat/schema-migration`: versioned database migrations (`user_version`); the first one adds `source_app_name` to `clips` without touching existing rows. Tested against a database created with the old schema.
+- [x] 7.1 `feat/schema-migration`: versioned database migrations (`user_version`); the first one adds `source_app_name` to `clips` without touching existing rows. Tested against a database created with the old schema.
+  - Verified automatically: 4 migration tests (fresh database, old-schema fixture keeps its Clips, migrating twice, a newer database is refused and never moved aside) and a dry run on a copy of the real History (2 Clips, version 0 to 1, column added, nothing set aside). Your real History migrates the first time this build runs; the step is additive and runs in a transaction.
 - [ ] 7.2 `feat/source-app`: `Clip` and `PasteboardSnapshot` carry an optional Source app; the real pasteboard fills it from the frontmost app at capture time (it can lag the copy by up to the 0.5 s poll interval); the store saves and lists it. Core tests with the fake pasteboard.
 - [ ] 7.3 `feat/pdf-representation`: new `pdf` Representation kind for raw PDF data (`com.adobe.pdf`), ranked after images; previews and the menu show it as a PDF. Core tests.
 - [ ] 7.4 `feat/clip-metadata`: `ClipMetadata` in Core: all-Clip facts, text counts, image size and format (ImageIO), PDF pages and title (PDFKit), file facts and existence, link host. Tests with generated PNG and PDF fixtures and temp files.
