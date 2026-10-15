@@ -14,10 +14,12 @@ public actor ClipStore {
     nonisolated(unsafe) private var db: OpaquePointer?
 
     private let imagesDirectory: URL?
+    private var limits: Limits
 
     /// - Parameter imagesDirectory: where image bytes are kept as files. When nil, they stay in the database.
-    public init(path: String, imagesDirectory: URL? = nil) throws {
+    public init(path: String, imagesDirectory: URL? = nil, limits: Limits = .default) throws {
         self.imagesDirectory = imagesDirectory
+        self.limits = limits
         var handle: OpaquePointer?
         guard sqlite3_open(path, &handle) == SQLITE_OK, let handle else {
             let message = handle.map { String(cString: sqlite3_errmsg($0)) } ?? "cannot open database"
@@ -54,8 +56,8 @@ public actor ClipStore {
         }
     }
 
-    public static func inMemory() throws -> ClipStore {
-        try ClipStore(path: ":memory:")
+    public static func inMemory(limits: Limits = .default) throws -> ClipStore {
+        try ClipStore(path: ":memory:", limits: limits)
     }
 
     deinit {
@@ -266,18 +268,71 @@ public actor ClipStore {
     }
 }
 
+/// The two user-set caps on History.
+public struct Limits: Sendable, Equatable {
+    public var maxItems: Int
+    public var maxBytes: Int
+
+    public init(maxItems: Int, maxBytes: Int) {
+        self.maxItems = maxItems
+        self.maxBytes = maxBytes
+    }
+
+    public static let `default` = Limits(maxItems: 100, maxBytes: 100 * 1024 * 1024)
+}
+
 public enum CaptureResult: Sendable, Equatable {
     case stored
     case duplicate
 }
 
 extension ClipStore {
+    func usageNewestFirst() throws -> [(id: UUID, bytes: Int)] {
+        var rows: [(id: UUID, bytes: Int)] = []
+        try query(try handle(), "SELECT id, byte_count FROM clips ORDER BY last_used_at DESC, created_at DESC") {
+            rows.append((UUID(uuidString: String(cString: sqlite3_column_text($0, 0)))!, Int(sqlite3_column_int64($0, 1))))
+        }
+        return rows
+    }
+
     /// Records a new copy. A copy equal to the Clip at the top of History is a Duplicate and is not stored.
     public func capture(_ clip: Clip) throws -> CaptureResult {
         if try topContentKey() == clip.contentKey {
             return .duplicate
         }
         try insert(clip)
+        _ = try evict(to: limits)
         return .stored
+    }
+
+    /// Applies new Limits and trims History immediately. Returns how many Clips were evicted.
+    public func setLimits(_ newLimits: Limits) throws -> Int {
+        limits = newLimits
+        return try evict(to: newLimits)
+    }
+
+    /// How many Clips would be evicted if these Limits were applied now (for the trim warning).
+    public func evictionCount(for candidate: Limits) throws -> Int {
+        try evictionVictims(for: candidate).count
+    }
+
+    private func evict(to target: Limits) throws -> Int {
+        let victims = try evictionVictims(for: target)
+        try delete(ids: victims)
+        return victims.count
+    }
+
+    private func evictionVictims(for target: Limits) throws -> [UUID] {
+        var items = 0
+        var bytes = 0
+        var victims: [UUID] = []
+        for entry in try usageNewestFirst() {
+            items += 1
+            bytes += entry.bytes
+            if items > target.maxItems || bytes > target.maxBytes {
+                victims.append(entry.id)
+            }
+        }
+        return victims
     }
 }
