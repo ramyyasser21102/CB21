@@ -211,3 +211,22 @@ private func makeTempDir() throws -> URL {
     try await store.deleteAll()
     #expect(try FileManager.default.contentsOfDirectory(atPath: images.path).isEmpty)
 }
+
+@Test func sweepRemovesImageFilesWithNoRowAndKeepsTheRest() async throws {
+    let dir = try makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let images = dir.appendingPathComponent("images")
+    let store = try ClipStore(path: dir.appendingPathComponent("h.sqlite").path, imagesDirectory: images)
+    let clip = imageClip([1, 2], at: 1)
+    try await store.insert(clip)
+    let orphan = images.appendingPathComponent("\(UUID().uuidString)-0")
+    try Data([9]).write(to: orphan)
+    #expect(try await store.sweepOrphanedImageFiles() == 1)
+    #expect(!FileManager.default.fileExists(atPath: orphan.path))
+    #expect(try await store.list() == [clip])
+}
+
+@Test func sweepWithoutAnImagesDirectoryDoesNothing() async throws {
+    let store = try ClipStore.inMemory()
+    #expect(try await store.sweepOrphanedImageFiles() == 0)
+}
