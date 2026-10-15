@@ -31,6 +31,18 @@ A copy whose content equals the Clip at the top of History. It is not stored aga
 A copy that is never captured and leaves no trace, because the source app marked it Concealed or Transient, or because cb21 is paused.
 _Avoid_: Ignored, filtered
 
+**Source app**:
+The app that was in front when a Clip was captured, kept as its name. Clips captured before this was recorded have none.
+_Avoid_: Origin, owner
+
+**Metadata**:
+Facts about a Clip shown to the user, such as size, counts, dimensions, page count or source app. Worked out on demand, except the source app and capture time, which are stored.
+_Avoid_: Properties, info
+
+**Detail pane**:
+The part of the History window that shows one selected Clip in full, with its Metadata.
+_Avoid_: Inspector, preview pane
+
 **History window**:
 The floating panel showing the full History, where the user browses, selects and deletes Clips. The menu shows only the latest Clips.
 _Avoid_: Popup, manager
