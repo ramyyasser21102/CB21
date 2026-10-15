@@ -63,9 +63,25 @@ struct HistoryView: View {
                 }
             }
             .onDeleteCommand { remove(selection) }
-            .contextMenu(forSelectionType: UUID.self) { _ in
+            .contextMenu(forSelectionType: UUID.self) { ids in
+                if !ids.isEmpty {
+                    Button(ids.count == 1 ? "Delete" : "Delete \(ids.count) Clips", role: .destructive) {
+                        remove(ids)
+                    }
+                }
             } primaryAction: { ids in
                 if let id = ids.first { recopy(id) }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if selection.count > 1 {
+                    HStack {
+                        Text("\(selection.count) selected")
+                        Spacer()
+                        Button("Delete Selected", role: .destructive) { remove(selection) }
+                    }
+                    .padding(8)
+                    .background(.bar)
+                }
             }
         }
     }

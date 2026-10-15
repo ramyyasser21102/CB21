@@ -63,7 +63,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 4.2 `feat/delete-ui`: per-Clip delete button and Delete key. **Manual**
   - Verified automatically: builds; deletion itself (rows and image files) is covered by `CB21Core` tests.
   - **Manual:** each row has a trash button that deletes only that Clip. Selecting a row and pressing Delete removes it. Check the Clip is gone from the menu too.
-- [ ] 4.3 `feat/multi-select`: Shift/Cmd-click multi-select, then delete. **Manual**
+- [x] 4.3 `feat/multi-select`: Shift/Cmd-click multi-select, then delete. **Manual**
+  - Verified automatically: builds.
+  - **Manual:** Shift-click and Cmd-click select several rows; a "N selected" bar with "Delete Selected" appears, and the right-click menu offers "Delete N Clips". Delete removes exactly the selected Clips.
 - [ ] 4.4 `feat/clear-all`: Clear all with confirmation, from the menu and the window. **Manual**
 
 ## Phase 5 — Settings, shortcuts, Pause
