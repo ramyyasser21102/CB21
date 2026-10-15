@@ -152,7 +152,8 @@ Order: the saved flag and the page flow in Core (8.1–8.2), then the window (8.
 
 - [x] 8.1 `feat/welcome-flag`: `welcomeCompleted` in `SettingsValues`, false by default, so older saved settings still load; Core tests.
   - Verified automatically: 3 Core tests (default false, persists, settings saved before the flag existed still load, other settings survive); full check passes. Nothing visible yet.
-- [ ] 8.2 `feat/welcome-flow`: `WelcomeFlow` in Core: the five pages, next, back, skip, last page, progress, finish sets completed. Core tests.
+- [x] 8.2 `feat/welcome-flow`: `WelcomeFlow` in Core: the five pages, next, back, skip, last page, progress, finish sets completed. Core tests.
+  - Verified automatically: 10 Core tests (page order, start state, walking forward, finishing on the last page, back, skipping and remembering skipped pages, closing at any step, progress, a finished flow ignores more moves). Nothing visible yet.
 - [ ] 8.3 `feat/welcome-window`: fixed-size black window with hidden title bar, always dark; page container with slide and fade transitions, stretching progress dots, the logo draw-in; Reduce Motion gives cross-fades; Welcome and Privacy pages; opens automatically when the flag is false and from "Welcome…" in the menu and Settings. **Manual**
 - [ ] 8.4 `feat/welcome-clipboard`: the clipboard page: reads the clipboard once to trigger the system prompt, live state (allowed, ask, denied, unknown before 15.4) with the explanation text in Core (tested), check pop, "Open System Settings". **Manual**
 - [ ] 8.5 `feat/welcome-login`: the launch-at-login page with the approval hint. **Manual**
