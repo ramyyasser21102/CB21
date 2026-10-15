@@ -14,7 +14,8 @@ struct CB21App: App {
             MenuContent(
                 model: service.model,
                 recopy: { id in service.recopy(id: id) },
-                openHistory: { HistoryWindowController.shared.show(service: service) }
+                openHistory: { HistoryWindowController.shared.show(service: service) },
+                clearAll: { service.confirmAndClearAll() }
             )
         }
     }
@@ -24,6 +25,7 @@ struct MenuContent: View {
     let model: HistoryModel
     let recopy: (UUID) -> Void
     let openHistory: () -> Void
+    let clearAll: () -> Void
 
     var body: some View {
         if model.pasteboardAccessDenied {
@@ -49,6 +51,8 @@ struct MenuContent: View {
         }
         Divider()
         Button("Open history…", action: openHistory)
+        Button("Clear all…", action: clearAll)
+            .disabled(model.rows.isEmpty)
         Button("Quit cb21") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
     }

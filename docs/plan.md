@@ -66,7 +66,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 4.3 `feat/multi-select`: Shift/Cmd-click multi-select, then delete. **Manual**
   - Verified automatically: builds.
   - **Manual:** Shift-click and Cmd-click select several rows; a "N selected" bar with "Delete Selected" appears, and the right-click menu offers "Delete N Clips". Delete removes exactly the selected Clips.
-- [ ] 4.4 `feat/clear-all`: Clear all with confirmation, from the menu and the window. **Manual**
+- [x] 4.4 `feat/clear-all`: Clear all with confirmation, from the menu and the window. **Manual**
+  - Verified automatically: builds; `deleteAll` (rows and image files) is covered by `CB21Core` tests.
+  - **Manual:** menu "Clear all…" and the window toolbar "Clear All…" both show a confirmation with the clip count. Cancel keeps everything; Clear All empties the menu and window. The menu item is disabled when History is empty.
 
 ## Phase 5 — Settings, shortcuts, Pause
 

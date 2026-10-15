@@ -14,7 +14,8 @@ final class HistoryWindowController {
             let hosting = NSHostingController(rootView: HistoryView(
                 model: service.model,
                 recopy: { service.recopy(id: $0) },
-                delete: { service.delete(ids: $0) }
+                delete: { service.delete(ids: $0) },
+                clearAll: { service.confirmAndClearAll() }
             ))
             let window = NSWindow(contentViewController: hosting)
             window.title = "cb21 History"
@@ -42,6 +43,7 @@ struct HistoryView: View {
     let model: HistoryModel
     let recopy: (UUID) -> Void
     let delete: (Set<UUID>) -> Void
+    let clearAll: () -> Void
     @State private var selection = Set<UUID>()
 
     var body: some View {
@@ -63,6 +65,11 @@ struct HistoryView: View {
                 }
             }
             .onDeleteCommand { remove(selection) }
+            .toolbar {
+                ToolbarItem {
+                    Button("Clear All…", action: clearAll)
+                }
+            }
             .contextMenu(forSelectionType: UUID.self) { ids in
                 if !ids.isEmpty {
                     Button(ids.count == 1 ? "Delete" : "Delete \(ids.count) Clips", role: .destructive) {
