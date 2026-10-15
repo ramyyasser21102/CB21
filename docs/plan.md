@@ -96,7 +96,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 5.8 `feat/menu-shortcut`: optional global shortcut that opens the menu bar list itself; same validation and conflict rules as the other shortcuts. **Manual**
   - Verified automatically: persistence test; app builds. All three shortcuts now refuse a duplicate of each other (Core validator, covered by tests).
   - **Manual:** Settings > Shortcuts > "Open menu bar list": record e.g. Ctrl-Opt-M. Pressing it from any app opens the menu bar menu under the icon, as if clicked; Escape or clicking away closes it. Refused when equal to the other two shortcuts or a system one.
-- [ ] 5.9 `feat/history-copy-button`: a Copy button beside Delete in the History window: Recopy (the Clip becomes the most recent and goes on the pasteboard) and close the window. **Manual**
+- [x] 5.9 `feat/history-copy-button`: a Copy button beside Delete in the History window: Recopy (the Clip becomes the most recent and goes on the pasteboard) and close the window. **Manual**
+  - Verified automatically: Recopy ordering and not re-capturing are Core tests; app builds.
+  - **Manual:** each row has a Copy button (two-pages icon) left of the trash. Clicking it closes the window, focus returns to the app you came from, and pasting there pastes that Clip. Reopen the window: the Clip is at the top and not duplicated. Double-click does the same.
 - [ ] 5.10 `feat/latest-clip-dot`: a dot marks the most recently used Clip in the History window. **Manual**
 
 ## Phase 6 — Release

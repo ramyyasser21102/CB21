@@ -13,7 +13,10 @@ final class HistoryWindowController {
         if window == nil {
             let hosting = NSHostingController(rootView: HistoryView(
                 model: service.model,
-                recopy: { service.recopy(id: $0) },
+                copy: { id in
+                    service.recopy(id: id)
+                    HistoryWindowController.shared.hide()
+                },
                 delete: { service.delete(ids: $0) },
                 clearAll: { service.confirmAndClearAll() }
             ))
@@ -30,6 +33,12 @@ final class HistoryWindowController {
         window?.makeKeyAndOrderFront(nil)
     }
 
+    /// Closes the window and hands focus back to the app the user came from, ready to paste.
+    func hide() {
+        window?.orderOut(nil)
+        NSApp.hide(nil)
+    }
+
     func toggle(service: CaptureService) {
         if let window, window.isVisible, window.isKeyWindow {
             window.orderOut(nil)
@@ -41,7 +50,8 @@ final class HistoryWindowController {
 
 struct HistoryView: View {
     let model: HistoryModel
-    let recopy: (UUID) -> Void
+    /// Puts the Clip on the pasteboard, makes it the most recent, and closes the window.
+    let copy: (UUID) -> Void
     let delete: (Set<UUID>) -> Void
     let clearAll: () -> Void
     @State private var selection = Set<UUID>()
@@ -56,12 +66,21 @@ struct HistoryView: View {
                     ClipLabel(row: row).lineLimit(1)
                     Spacer()
                     Button {
+                        copy(row.id)
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Copy this clip and close")
+                    .accessibilityLabel("Copy clip")
+                    Button {
                         remove([row.id])
                     } label: {
                         Image(systemName: "trash")
                     }
                     .buttonStyle(.borderless)
                     .help("Delete this clip")
+                    .accessibilityLabel("Delete clip")
                 }
             }
             .onDeleteCommand { remove(selection) }
@@ -77,7 +96,7 @@ struct HistoryView: View {
                     }
                 }
             } primaryAction: { ids in
-                if let id = ids.first { recopy(id) }
+                if let id = ids.first { copy(id) }
             }
             .safeAreaInset(edge: .bottom) {
                 if selection.count > 1 {
