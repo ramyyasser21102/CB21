@@ -14,6 +14,7 @@ No account, no ads, no network access, no telemetry.
 - **Menu bar list** of your 10 most recent copies. Click one to copy it back.
 - **History window** with the full list. Select several clips with Shift or Cmd-click, then delete them. Each row has a Copy button that copies the clip, makes it the most recent and closes the window so you can paste straight away.
 - **Global shortcuts** (all optional, you choose the keys): open the History window, open the menu bar list, and pause or resume capture.
+- **Details for every clip**: select a clip in the History window to see it in full next to the list. Text shows with character, word and line counts; images with their size and format; PDFs with a first-page preview, page count and title; files with a thumbnail, size, kind and modified date; links with their host. Each row also shows when it was copied, how big it is and which app it came from.
 - **Pause capture** for 5 minutes, 15 minutes or until you resume, so you can copy a secret without it being saved.
 - **Skips sensitive copies** that apps mark as concealed, such as password managers.
 - **You set the limits**: maximum number of clips (default 100) and maximum storage (default 100 MB). The least recently used clips go first.
@@ -43,7 +44,7 @@ The app logic lives in the `CB21Core` Swift package (no UI, covered by tests). T
 
 ## Privacy
 
-cb21 makes no network connections. History is stored on your Mac in `~/Library/Application Support/cb21/` and **is not encrypted**, so anyone with access to your account can read it. Deleting a clip, or using Clear all, removes it from the database (with SQLite `secure_delete` on) and deletes its image files.
+cb21 makes no network connections. For each new clip it also remembers the name of the app that was in front when you copied (the "source app"), stored only on your Mac with the rest of your History. History is stored on your Mac in `~/Library/Application Support/cb21/` and **is not encrypted**, so anyone with access to your account can read it. Deleting a clip, or using Clear all, removes it from the database (with SQLite `secure_delete` on) and deletes its image files.
 
 cb21 skips copies that apps mark as concealed or transient. Use Pause for anything else you don't want kept.
 
