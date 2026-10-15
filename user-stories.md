@@ -91,6 +91,23 @@ As a user, I want to see what a clip really is, so I can tell similar clips apar
 - The menu bar list is unchanged.
 - Previews and Metadata are worked out on demand off the main thread, so a large image or PDF doesn't freeze the window. The Source app is recorded locally only.
 
+### CB-8: Welcome and first-run setup
+
+As a new user, I want a short guided setup the first time cb21 runs, so it works properly on my Mac without hunting through System Settings.
+
+- The Welcome window opens automatically the first time cb21 runs, and can be reopened from a "Welcome…" entry in the menu and in Settings. A saved flag records that it was finished or skipped, so it doesn't reappear on its own.
+- It is a centered, fixed-size window with a hidden title bar: pure black background, white text, system font and SF Symbols, the cb21 glyph as the logo. It is always dark, whatever the system theme; the rest of the app follows the system.
+- Five pages, each skippable, closable at any step:
+  1. Welcome: the animated logo and one line about what cb21 does.
+  2. Clipboard access: reads the clipboard once so the system prompt appears at a moment the user expects, shows the live state (allowed, ask, denied; unknown before macOS 15.4), and opens System Settings for "Always allow". Denied or "ask every time" explains that capture won't work reliably.
+  3. Launch at login: a toggle, with the approval hint when macOS needs it.
+  4. Shortcuts: the three optional shortcuts with the same recorder and conflict checks as Settings.
+  5. Privacy and done: no network, stored on the Mac unencrypted, Pause and skipped sensitive copies, then "Start using cb21".
+- cb21 asks for nothing it doesn't use: no Accessibility, Input Monitoring or Screen Recording.
+- Animations are simple: the logo draws in, pages slide and fade, progress dots stretch, a check pops in when access is granted. With Reduce Motion on, pages cross-fade with no movement.
+- cb21 works whether or not the user finishes it; anything left undone still shows its notice in the menu.
+- Existing installs see it once after updating, because the saved flag doesn't exist yet.
+
 ## Settings
 
 A single pane with three sections:
