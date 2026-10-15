@@ -161,12 +161,17 @@ public actor ClipStore {
         var writtenFiles: [URL] = []
         try Self.execute(db, "BEGIN")
         do {
-            try run(db, "INSERT INTO clips (id, content_key, created_at, last_used_at, byte_count) VALUES (?, ?, ?, ?, ?)") { stmt in
+            try run(db, "INSERT INTO clips (id, content_key, created_at, last_used_at, byte_count, source_app_name) VALUES (?, ?, ?, ?, ?, ?)") { stmt in
                 sqlite3_bind_text(stmt, 1, clip.id.uuidString, -1, sqliteTransient)
                 sqlite3_bind_text(stmt, 2, clip.contentKey, -1, sqliteTransient)
                 sqlite3_bind_double(stmt, 3, clip.createdAt.timeIntervalSince1970)
                 sqlite3_bind_double(stmt, 4, clip.lastUsedAt.timeIntervalSince1970)
                 sqlite3_bind_int64(stmt, 5, Int64(clip.byteCount))
+                if let source = clip.sourceAppName {
+                    sqlite3_bind_text(stmt, 6, source, -1, sqliteTransient)
+                } else {
+                    sqlite3_bind_null(stmt, 6)
+                }
             }
             for (position, rep) in clip.representations.enumerated() {
                 var fileName: String?
@@ -269,13 +274,14 @@ public actor ClipStore {
     /// All Clips, most recently used first.
     public func list() throws -> [Clip] {
         let db = try handle()
-        var rows: [(id: UUID, created: Date, used: Date)] = []
-        try query(db, "SELECT id, created_at, last_used_at FROM clips ORDER BY last_used_at DESC, created_at DESC") { stmt in
+        var rows: [(id: UUID, created: Date, used: Date, source: String?)] = []
+        try query(db, "SELECT id, created_at, last_used_at, source_app_name FROM clips ORDER BY last_used_at DESC, created_at DESC") { stmt in
             let id = UUID(uuidString: String(cString: sqlite3_column_text(stmt, 0)))!
             rows.append((
                 id,
                 Date(timeIntervalSince1970: sqlite3_column_double(stmt, 1)),
-                Date(timeIntervalSince1970: sqlite3_column_double(stmt, 2))
+                Date(timeIntervalSince1970: sqlite3_column_double(stmt, 2)),
+                sqlite3_column_text(stmt, 3).map { String(cString: $0) }
             ))
         }
         return try rows.compactMap { row -> Clip? in
@@ -302,7 +308,7 @@ public actor ClipStore {
                 ))
             }
             if missingFile || reps.isEmpty { return nil }
-            return Clip(id: row.id, representations: reps, createdAt: row.created, lastUsedAt: row.used)
+            return Clip(id: row.id, representations: reps, createdAt: row.created, lastUsedAt: row.used, sourceAppName: row.source)
         }
     }
 
