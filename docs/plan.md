@@ -140,7 +140,7 @@ Order: the stored facts first (7.1–7.3), then the logic in Core (7.4), then th
 - [x] 7.7 `feat/image-pdf-preview`: scaled image, first PDF page and Quick Look file thumbnails, generated off the main thread and cached, with a "File no longer exists" state. **Manual**
   - Verified automatically: `PreviewRenderer` in Core has 9 tests (scale down but never up, aspect ratio, PDF first page at up to 2x, unreadable and missing content, a Quick Look thumbnail of a real temp file), stable over 40 repeated runs; app builds and launches. The app caches the last 30 pictures and renders them off the main thread.
   - **Manual:** select an image clip: the picture shows scaled to fit above its facts. Select a PDF clip (copy a page from Preview) or a PDF file copied in Finder: first page appears. Select a file such as a photo or document copied in Finder: a thumbnail appears; delete or move that file and select the clip again: "File no longer exists" and the saved facts remain. Click quickly between clips: no freezing, and the picture always matches the selected clip.
-- [ ] 7.8 `docs/readme-source-app`: README privacy section mentions the locally stored Source app and the new Detail pane.
+- [x] 7.8 `docs/readme-source-app`: README privacy section mentions the locally stored Source app and the new Detail pane.
 
 ## Hand-back note
 
