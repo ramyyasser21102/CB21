@@ -45,7 +45,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 - [x] 3.2 `feat/pasteboard-watcher`: real `NSPasteboard` watcher in the app target feeding Capture.
   - Verified automatically: ran the built app against a throwaway data folder, `pbcopy` text was captured, a repeated copy stored once. Known limit: only the first pasteboard item is read, so copying several files at once keeps only the first.
 - [x] 3.3 `feat/menu-previews`: preview text, thumbnail, file name and URL per Representation (in Core, tested).
-- [ ] 3.4 `feat/menu-history`: menu lists the 10 most recent Clips; clicking a Clip Recopies it. **Manual**
+- [~] 3.4 `feat/menu-history`: menu lists the 10 most recent Clips; clicking a Clip Recopies it. **Manual**
+  - Verified automatically: builds, launches, capture feeds the model. The real menu could not be read (no assistive access for the agent).
+  - **Manual:** run the Debug build, copy 3 or 4 different things (text, a link, an image, a file in Finder). Open the menu: newest first, text truncated, link and file icons, image thumbnail. Click an older item, paste somewhere: it pastes, moves to the top and does not appear twice.
 - [ ] 3.5 `feat/pasteboard-access-notice`: first-launch message and System Settings link when access is denied. **Manual**
 - [ ] 3.6 `feat/db-notice`: one-time notices for oversized Clips and database recovery in the menu. **Manual**
 
