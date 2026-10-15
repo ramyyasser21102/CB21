@@ -1,0 +1,31 @@
+name: cb21
+options:
+  bundleIdPrefix: com.ramyyasser
+  deploymentTarget:
+    macOS: "14.0"
+packages:
+  cb21:
+    path: .
+targets:
+  cb21:
+    type: application
+    platform: macOS
+    sources: [App]
+    dependencies:
+      - package: cb21
+        product: CB21Core
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleName: cb21
+        CFBundleDisplayName: cb21
+        LSUIElement: true
+        LSMinimumSystemVersion: "14.0"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ramyyasser.cb21
+        SWIFT_VERSION: "6.0"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_HARDENED_RUNTIME: NO
+        GENERATE_INFOPLIST_FILE: NO
