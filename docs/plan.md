@@ -107,6 +107,10 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 - [x] S5 `fix/double-close-on-failed-open`: opening a corrupt database closed the connection twice (once in `init`'s failure path, once in `deinit`), a use-after-free that crashed parallel test runs about 1 time in 20 and could affect the app's corrupt-History recovery. Found from the macOS crash reports; fixed by clearing the pointer; 0 failures in 200 parallel runs afterwards.
 
+- [x] S6 `fix/menu-shortcut-stacking`: pressing the open-menu shortcut repeatedly queued one reopen per press, because opening the menu from code blocks until it closes. The press is now judged at the moment it arrives and dropped if the menu is open or opening (`MenuOpenGate` in Core, 5 tests; the hotkey layer asks it before queueing anything).
+  - Verified automatically: gate tests; app builds. The key presses themselves could not be simulated (no accessibility permission for the agent).
+  - **Manual:** set the open-menu shortcut, press it once (menu opens), then press it 5 times quickly while it is open: nothing queues, and after you close the menu it does not reopen. Pressing it again after closing opens it normally. Opening the menu with the mouse and then pressing the shortcut also does nothing.
+
 ## Phase 6 — Release
 
 - [x] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**

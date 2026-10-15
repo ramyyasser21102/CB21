@@ -15,6 +15,8 @@ final class CaptureService {
     private var menuHotKeyID: UInt32?
     /// Opens the menu bar menu. Set by the app once the status item exists.
     var openMenu: (() -> Void)?
+    /// Asked when the open-menu shortcut is pressed; false drops the press (the menu is already open).
+    var shouldOpenMenu: (() -> Bool)?
     private(set) var store: ClipStore?
     private(set) var engine: CaptureEngine?
     private(set) var recoveredFrom: URL?
@@ -61,7 +63,9 @@ final class CaptureService {
     }
 
     private func registerMenu(_ shortcut: Shortcut) -> UInt32? {
-        hotKeys.register(shortcut) { [weak self] in self?.openMenu?() }
+        hotKeys.register(shortcut, isEnabled: { [weak self] in self?.shouldOpenMenu?() ?? true }) { [weak self] in
+            self?.openMenu?()
+        }
     }
 
     private func setShortcut(
