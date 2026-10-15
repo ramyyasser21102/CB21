@@ -7,6 +7,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     private let service: CaptureService
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
+    private var openGate = MenuOpenGate()
 
     init(service: CaptureService) {
         self.service = service
@@ -20,8 +21,14 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         }
     }
 
-    /// Opens the menu as if the icon had been clicked.
+    /// Called when the shortcut is pressed. False means the menu is open or opening, so the press is dropped.
+    func shouldOpenFromShortcut() -> Bool {
+        openGate.acceptShortcutPress()
+    }
+
+    /// Opens the menu as if the icon had been clicked. This blocks until the menu closes.
     func openMenu() {
+        defer { openGate.openFinished() }
         statusItem.button?.performClick(nil)
     }
 
@@ -33,6 +40,14 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     }
 
     // MARK: NSMenuDelegate
+
+    func menuWillOpen(_ menu: NSMenu) {
+        openGate.menuDidOpen()
+    }
+
+    func menuDidClose(_ menu: NSMenu) {
+        openGate.menuDidClose()
+    }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()

@@ -7,6 +7,8 @@ import CB21Core
 final class GlobalHotKeys {
     private struct Entry {
         let ref: EventHotKeyRef
+        /// Asked at the moment of the key press. Returning false drops the press instead of queueing it.
+        let isEnabled: () -> Bool
         let action: () -> Void
     }
 
@@ -15,7 +17,7 @@ final class GlobalHotKeys {
     private var handlerInstalled = false
 
     /// Registers a shortcut. Returns an id to unregister it with, or nil if the system refused it.
-    func register(_ shortcut: Shortcut, action: @escaping () -> Void) -> UInt32? {
+    func register(_ shortcut: Shortcut, isEnabled: @escaping () -> Bool = { true }, action: @escaping () -> Void) -> UInt32? {
         installHandlerIfNeeded()
         let id = nextID
         var ref: EventHotKeyRef?
@@ -26,7 +28,7 @@ final class GlobalHotKeys {
         )
         guard status == noErr, let ref else { return nil }
         nextID += 1
-        entries[id] = Entry(ref: ref, action: action)
+        entries[id] = Entry(ref: ref, isEnabled: isEnabled, action: action)
         return id
     }
 
@@ -34,6 +36,10 @@ final class GlobalHotKeys {
         if let entry = entries.removeValue(forKey: id) {
             UnregisterEventHotKey(entry.ref)
         }
+    }
+
+    fileprivate func accepts(_ id: UInt32) -> Bool {
+        entries[id]?.isEnabled() ?? false
     }
 
     fileprivate func fire(_ id: UInt32) {
@@ -50,7 +56,11 @@ final class GlobalHotKeys {
             GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
                               nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
             let manager = Unmanaged<GlobalHotKeys>.fromOpaque(userData).takeUnretainedValue()
-            DispatchQueue.main.async { MainActor.assumeIsolated { manager.fire(hotKeyID.id) } }
+            let id = hotKeyID.id
+            // Carbon delivers this on the main thread. Deciding here, before any hop to a queue, is what lets a
+            // press made while the menu is open be dropped instead of waiting in line behind it.
+            guard MainActor.assumeIsolated({ manager.accepts(id) }) else { return noErr }
+            DispatchQueue.main.async { MainActor.assumeIsolated { manager.fire(id) } }
             return noErr
         }, 1, &spec, Unmanaged.passUnretained(self).toOpaque(), nil)
     }
