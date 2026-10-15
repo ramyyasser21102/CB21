@@ -22,7 +22,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 - [x] 1.1 `feat/package-skeleton`: `Package.swift` with `CB21Core` and its test target, Swift 6 mode, one passing test.
 - [x] 1.2 `feat/app-target`: XcodeGen `project.yml`, `cb21` app target, `LSUIElement`, ad-hoc signing, builds with `xcodebuild`.
-- [ ] 1.3 `feat/menu-bar-stub`: menu bar icon with a stub menu (Quit only). **Manual:** icon appears, menu opens.
+- [~] 1.3 `feat/menu-bar-stub`: menu bar icon with a stub menu (Quit only). **Manual:** icon appears, menu opens.
+  - Verified automatically: builds, launches, process stays running for 4 s, no crash report.
+  - **Manual:** run `open` on the built `cb21.app` (Debug build in DerivedData). Check that a clipboard icon appears in the menu bar, no Dock icon shows, and the menu offers Quit cb21 (Cmd-Q).
 
 ## Phase 2 — Storage core (`CB21Core`, test-first)
 
