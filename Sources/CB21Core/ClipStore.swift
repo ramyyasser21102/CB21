@@ -55,7 +55,9 @@ public actor ClipStore {
                 """)
             try Self.migrate(handle)
         } catch {
+            // `deinit` also closes `db`, and it still runs when init throws, so clear it to avoid a double close.
             sqlite3_close(handle)
+            db = nil
             throw error
         }
     }
