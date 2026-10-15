@@ -32,6 +32,26 @@ final class CaptureService {
         }
     }
 
+    /// Applies new Limits. If that would delete Clips, asks first. Returns whether the change was applied.
+    func applyLimits(_ limits: Limits) async -> Bool {
+        guard let store else { return false }
+        let evicted = (try? await store.evictionCount(for: limits)) ?? 0
+        if evicted > 0 {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = "Delete \(evicted) older \(evicted == 1 ? "clip" : "clips")?"
+            alert.informativeText = "These limits are lower than your current History. The least recently used clips will be permanently deleted now."
+            alert.addButton(withTitle: "Lower Limits")
+            alert.addButton(withTitle: "Cancel")
+            alert.buttons.first?.hasDestructiveAction = true
+            guard alert.runModal() == .alertFirstButtonReturn else { return false }
+        }
+        _ = try? await store.setLimits(limits)
+        settings.update { $0.limits = limits }
+        await model.refresh(from: store)
+        return true
+    }
+
     /// Permanently deletes Clips from History and disk.
     func delete(ids: Set<UUID>) {
         guard let store, !ids.isEmpty else { return }

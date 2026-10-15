@@ -74,7 +74,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 - [x] 5.1 `feat/settings-shell`: Settings pane with Shortcuts, History and General sections; settings persist.
   - Verified automatically: settings save/load/default tests in Core; app builds. **Manual:** menu "Settings…" (or Cmd-comma with the menu open) opens a window with Shortcuts, History and General sections; History shows 100 clips and 100 MB.
-- [ ] 5.2 `feat/limits-ui`: Limits controls with defaults (100 Clips, 100 MB) and the trim warning. **Manual**
+- [x] 5.2 `feat/limits-ui`: Limits controls with defaults (100 Clips, 100 MB) and the trim warning. **Manual**
+  - Verified automatically: eviction count and trimming are covered by Core tests; app builds and launches.
+  - **Manual:** Settings > History: change the two numbers, Apply is enabled only when valid and changed; lowering below the current History shows "Delete N older clips?" (Cancel restores the old numbers); Reset to Defaults gives 100 / 100 MB; values survive quitting and relaunching. With the storage limit at 1 MB, copying a larger image or text should show the "too large" notice in the menu (this also completes the 3.6 check).
 - [ ] 5.3 `feat/shortcut-validation`: shortcut rules in Core (modifier required, system shortcuts rejected), tested.
 - [ ] 5.4 `feat/history-shortcut`: shortcut recorder and global binding that toggles the History window. **Manual**
 - [ ] 5.5 `feat/pause-core`: Pause state with 5, 15 minute and until-resumed timers, always cleared at restart (in Core, tested).
