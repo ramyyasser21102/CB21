@@ -108,6 +108,37 @@ As a new user, I want a short guided setup the first time CB21 runs, so it works
 - CB21 works whether or not the user finishes it; anything left undone still shows its notice in the menu.
 - Existing installs see it once after updating, because the saved flag doesn't exist yet.
 
+### CB-9: Search clips
+
+As a user, I want to type to narrow my clips, so I can find an old one without scrolling.
+
+- The menu bar menu has a search field at the top. Typing filters the list live; clearing it restores the normal list.
+- The History window has a search field that filters its list the same way.
+- Matching ignores case and accents, and every word typed must match. It looks at the Clip's text, link URL, file name and Source app. Images and PDFs match by Source app and file name only.
+- The menu searches the whole History, not just the clips it normally shows.
+- The menu filters from memory, instantly, because a menu that is open can't wait for the database.
+- Each Clip stores a searchable-text copy of its content (the first 2,000 characters). A database migration fills it in for existing clips.
+
+### CB-10: Quick select with ⌘1 to ⌘9
+
+As a user, I want to press ⌘ and a number to pick a clip, so I can copy a recent clip without touching the mouse.
+
+- The first nine rows of the menu and of the History window show ⌘1 to ⌘9.
+- Pressing one Recopies that row (it moves to the top and goes on the clipboard) and closes the menu or window, like the Copy button.
+- With a search active, the numbers apply to the filtered rows.
+- It copies only. CB21 doesn't paste for the user, because that would need the Accessibility permission.
+
+### CB-11: Pin clips
+
+As a user, I want to pin clips I use often, so they stay on top and never get deleted to make room.
+
+- A Pinned clip appears first, in its own section with a divider, newest pin first, in the menu and in the History window. A star marks it.
+- In the menu, hold ⌥ and a row becomes "Pin…" or "Unpin…". In the History window each row has a star button, and the right-click menu has Pin and Unpin.
+- The menu shows all pinned clips, then the 10 most recent others. ⌘1 to ⌘9 number the first nine rows overall.
+- Limits never delete a Pinned clip. Pinned clips still count toward the totals, so other clips go first; if pinned clips alone exceed the limits, all other clips go and the pinned ones stay.
+- "Clear all" keeps Pinned clips unless the user ticks "Also delete pinned clips". Deleting a Pinned clip on purpose asks for a quick confirmation.
+- Pinning doesn't change a Clip's content or the Duplicate rule.
+
 ## Settings
 
 A single pane with three sections:
@@ -127,8 +158,9 @@ A single pane with three sections:
 | Excluded | Reason |
 | --- | --- |
 | Cloud/iCloud sync | Adds privacy risk and a backend, which conflicts with "free" |
-| Search and pinning | Useful, but not in the feature list; easy to add as v1.1 |
 | Zoom, editing, syntax highlighting and search inside the Detail pane | Not needed to tell clips apart; candidates for later |
+| Searching inside images and PDFs by their content | Search matches text, links, file names and the source app only |
+| Manually ordering pinned clips | Pinned clips are ordered by when they were pinned |
 | Paste as plain text | Recopy writes all Representations in v1; a plain-text option is a v1.1 candidate |
 | Snippets/text expansion | Different product category |
 | Per-app ignore list | Beyond the concealed-type check and Pause, this is extra scope |

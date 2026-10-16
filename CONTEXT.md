@@ -47,6 +47,18 @@ _Avoid_: Inspector, preview pane
 The first-run window that walks the user through clipboard access, launch at login, shortcuts and privacy. Always dark, black and white. It can be skipped and reopened.
 _Avoid_: Onboarding, wizard, setup assistant
 
+**Pinned clip**:
+A Clip the user starred so it stays on top of History and is never deleted to make room. Pinned clips are listed first, newest pin first.
+_Avoid_: Favorite, starred, bookmark
+
+**Search**:
+Narrowing the list of Clips by typing, matching the Clip's text, link, file name or Source app, ignoring case and accents. Works in the menu bar menu and the History window.
+_Avoid_: Filter, find
+
+**Quick select**:
+Pressing ⌘1 to ⌘9 to Recopy the Nth visible Clip and close the menu or window. It copies only; it never pastes for the user.
+_Avoid_: Shortcut paste, hotkey paste
+
 **History window**:
 The floating panel showing the full History, where the user browses, selects and deletes Clips. The menu shows only the latest Clips.
 _Avoid_: Popup, manager
