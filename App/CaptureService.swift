@@ -225,7 +225,7 @@ final class CaptureService {
 
     func start() {
         guard task == nil else { return }
-        folderAccess.quietCheckAtLaunch()
+        folderAccess.refreshQuietly()
         let dir = Self.dataDirectory
         do {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

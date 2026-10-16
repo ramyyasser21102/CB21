@@ -85,6 +85,32 @@ struct SettingsView: View {
             } footer: {
                 Text("When either limit is reached, the least recently used clips are deleted first.")
             }
+            Section {
+                ForEach(ProtectedFolder.allCases, id: \.self) { folder in
+                    LabeledContent(folder.displayName) {
+                        HStack(spacing: 6) {
+                            Image(systemName: folderIcon(service.folderAccess.state(for: folder)))
+                                .foregroundStyle(.secondary)
+                            Text(folderLabel(service.folderAccess.state(for: folder)))
+                        }
+                    }
+                }
+                HStack {
+                    Button(service.folderAccess.isChecking ? "Waiting for macOS…" : "Allow Access") {
+                        Task { await service.folderAccess.requestAccess() }
+                    }
+                    .disabled(service.folderAccess.isChecking || service.folderAccess.allAllowed)
+                    Spacer()
+                    Button("Open Files & Folders Settings") {
+                        if let url = URL(string: SystemSettingsLink.filesAndFolders) { NSWorkspace.shared.open(url) }
+                    }
+                    .buttonStyle(.link)
+                }
+            } header: {
+                Text("File access")
+            } footer: {
+                Text("Lets CB21 show details and previews for files you copy from these folders. Until you allow a folder, CB21 won't look inside it.")
+            }
             Section("General") {
                 Toggle("Launch at login", isOn: Binding(
                     get: { launchStatus != .off },
@@ -104,8 +130,11 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { launchStatus = LaunchAtLogin.status }
-        .frame(width: 440, height: 490)
+        .onAppear {
+            launchStatus = LaunchAtLogin.status
+            service.folderAccess.refreshQuietly()
+        }
+        .frame(width: 460, height: 780)
     }
 
     private func apply() async {
@@ -113,5 +142,23 @@ struct SettingsView: View {
         // Cancelled: show what is actually in effect.
         maxItems = settings.values.limits.maxItems
         maxMegabytes = settings.values.limits.maxBytes / Self.bytesPerMegabyte
+    }
+
+    private func folderIcon(_ state: FolderAccessState?) -> String {
+        switch state {
+        case .allowed: "checkmark.circle.fill"
+        case .denied: "xmark.circle"
+        case .missing: "minus.circle"
+        case nil: "circle.dashed"
+        }
+    }
+
+    private func folderLabel(_ state: FolderAccessState?) -> String {
+        switch state {
+        case .allowed: "Allowed"
+        case .denied: "Not allowed"
+        case .missing: "Not on this Mac"
+        case nil: "Not asked yet"
+        }
     }
 }
