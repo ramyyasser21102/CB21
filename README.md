@@ -31,7 +31,9 @@ No account, no ads, no network access, no telemetry.
 3. Open it. CB21 isn't notarized by Apple, because it is a free project without a paid developer account, so macOS blocks the first launch. Either:
    - open **System Settings > Privacy & Security**, scroll down, and click **Open Anyway** next to CB21; or
    - run `xattr -dr com.apple.quarantine /Applications/CB21.app` in Terminal and open it again.
-4. On macOS 15.4 and later, choose **Always Allow** when macOS asks to let CB21 read the clipboard. The Welcome window walks you through it, and you can change it later in **System Settings > Privacy & Security > Paste from Other Apps**. CB21 needs no other permissions: not Accessibility, not Input Monitoring, not Screen Recording.
+4. On macOS 15.4 and later, choose **Always Allow** when macOS asks to let CB21 read the clipboard. The Welcome window walks you through it, and you can change it later in **System Settings > Privacy & Security > Paste from Other Apps**. 5. Optional: to see details and previews for files you copy from **Desktop, Documents and Downloads**, allow CB21 access to those folders. The Welcome window has a "Your files" page for this, and Settings has a File access section. macOS asks once per folder; CB21 never looks inside them before you say yes, and it doesn't ask for Full Disk Access.
+
+CB21 needs no other permissions: not Accessibility, not Input Monitoring, not Screen Recording.
 
 Requires macOS 14 (Sonoma) or later.
 

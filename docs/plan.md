@@ -231,7 +231,7 @@ Decided with the user: ask for Desktop, Documents and Downloads on purpose (not 
 - [x] 10.5 `feat/recopy-file-reference`: Recopy writes file clips as proper file references when access allows, otherwise as before. **Manual**
   - Verified automatically, through the real app on a real file: copying a file clip back put a file URL on the system clipboard that reads back as an `NSURL` for the actual file, and a clip whose file had gone was still put back (the old way). Folder states reach the pasteboard through a locked copy, because the write runs off the main thread. Limit of the test: macOS adds the compatibility flavors (`NSFilenamesPboardType` and others) to any file URL, so the old and new writes look the same from outside. The benefit for sandboxed receiving apps (Mail, Messages, browsers) can't be observed from here.
   - **Manual (final checklist):** copy a file in Finder (from Desktop, say), then copy something else, then use CB21 to copy the file clip back and paste into Finder (the file should be copied), into Mail or Messages as an attachment, and into a browser upload. Do the same for an image file. For a file in Documents before you allowed Documents, it falls back to the old behaviour instead of prompting.
-- [ ] 10.6 `docs/readme-folder-access`: README permissions section.
+- [x] 10.6 `docs/readme-folder-access`: README permissions section.
 
 ## Hand-back note
 
