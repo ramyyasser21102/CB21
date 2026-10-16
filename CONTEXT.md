@@ -59,6 +59,10 @@ _Avoid_: Filter, find
 Pressing ⌘1 to ⌘9 to Recopy the Nth visible Clip and close the menu or window. It copies only; it never pastes for the user.
 _Avoid_: Shortcut paste, hotkey paste
 
+**Folder access**:
+Permission macOS asks for before an app may read files in Desktop, Documents or Downloads. CB21 asks on purpose, from the Welcome window or Settings, and never touches a file in those folders until it has it.
+_Avoid_: File permission, disk access
+
 **History window**:
 The floating panel showing the full History, where the user browses, selects and deletes Clips. The menu shows only the latest Clips.
 _Avoid_: Popup, manager
