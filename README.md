@@ -19,6 +19,7 @@ No account, no ads, no network access, no telemetry.
 - **Skips sensitive copies** that apps mark as concealed, such as password managers.
 - **You set the limits**: maximum number of clips (default 100) and maximum storage (default 100 MB). The least recently used clips go first.
 - **Launch at login**, off by default.
+- **A short Welcome** the first time you open cb21: it helps you allow clipboard access, choose whether to start at login, set your shortcuts, and explains what is kept. You can skip any step, and reopen it later from the menu ("Welcome…") or Settings.
 
 ## Install
 
@@ -27,7 +28,7 @@ No account, no ads, no network access, no telemetry.
 3. Open it. cb21 isn't notarized by Apple, because it is a free project without a paid developer account, so macOS blocks the first launch. Either:
    - open **System Settings > Privacy & Security**, scroll down, and click **Open Anyway** next to cb21; or
    - run `xattr -dr com.apple.quarantine /Applications/cb21.app` in Terminal and open it again.
-4. On macOS 15.4 and later, allow cb21 to read the clipboard if asked (**System Settings > Privacy & Security > Paste from Other Apps**).
+4. On macOS 15.4 and later, choose **Always Allow** when macOS asks to let cb21 read the clipboard. The Welcome window walks you through it, and you can change it later in **System Settings > Privacy & Security > Paste from Other Apps**. cb21 needs no other permissions: not Accessibility, not Input Monitoring, not Screen Recording.
 
 Requires macOS 14 (Sonoma) or later.
 
