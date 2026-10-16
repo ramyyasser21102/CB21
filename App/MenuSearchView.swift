@@ -10,6 +10,7 @@ final class MenuSearchView: NSView, NSSearchFieldDelegate {
 
     init() {
         super.init(frame: NSRect(x: 0, y: 0, width: 280, height: 32))
+        autoresizingMask = [.width]
         field.placeholderString = "Search"
         field.delegate = self
         field.setAccessibilityLabel("Search clips")

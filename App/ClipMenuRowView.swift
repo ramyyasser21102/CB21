@@ -46,6 +46,8 @@ final class ClipMenuRowView: NSView {
         isMostRecent = content.isMostRecent
         isPinned = content.isPinned
         super.init(frame: NSRect(origin: .zero, size: Self.size))
+        // Stretch to whatever width the menu ends up with, instead of staying at the width given here.
+        autoresizingMask = [.width]
         addTrackingArea(NSTrackingArea(
             rect: .zero,
             options: [.mouseMoved, .mouseEnteredAndExited, .activeAlways, .inVisibleRect],
