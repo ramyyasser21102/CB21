@@ -111,6 +111,8 @@ Each step is one branch. **Manual** marks what only the user can verify.
   - Verified automatically: gate tests; app builds. The key presses themselves could not be simulated (no accessibility permission for the agent).
   - **Manual:** set the open-menu shortcut, press it once (menu opens), then press it 5 times quickly while it is open: nothing queues, and after you close the menu it does not reopen. Pressing it again after closing opens it normally. Opening the menu with the mouse and then pressing the shortcut also does nothing.
 
+- [x] S7 `docs/license-gpl3`: GNU GPL v3 `LICENSE` (the canonical text from GitHub's license API), a README section with the copyright notice, ADR-0003, and the app's copyright string.
+
 ## Phase 6 — Release
 
 - [x] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**
