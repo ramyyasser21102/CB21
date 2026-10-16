@@ -179,6 +179,19 @@ Order: the saved flag and the page flow in Core (8.1–8.2), then the window (8.
   - **Manual:** Welcome page 4 lists "Open history", "Open menu bar list" and "Pause / resume capture" as white outline buttons on black. Click one and press e.g. Ctrl-Opt-V: it shows ⌃⌥V and works from any app straight away. A refused shortcut (Cmd-Space, no modifier, one another app owns, or one equal to another CB21 shortcut) shows a short message in grey with a warning sign. "Reset" clears it. While recording, the Return and arrow keys must not move the Welcome pages. Whatever you set here also shows in Settings > Shortcuts.
 - [x] 8.7 `docs/readme-welcome`: README mentions the Welcome window.
 
+## Phase 9 — Search, quick select and pins (CB-9 to CB-11, version 1.1.0)
+
+Order: the stored facts and logic in Core first (9.1–9.3), then a spike that hands the riskiest part, a search field inside a native menu, back to the user before anything else depends on it (9.4), then the rest of the menu (9.5–9.6), the History window (9.7) and the docs (9.8).
+
+- [ ] 9.1 `feat/search-pin-schema`: migration 2 adds `pinned_at` to `clips`; migration 3 adds `search_text` and fills it in for existing clips. Core tests against an old-schema fixture, as for migration 1.
+- [ ] 9.2 `feat/clip-search`: each Clip gets normalized searchable text (case- and accent-insensitive, first 2,000 characters; text, link URL, file name, Source app) stored at capture; `ClipSearch` matches every typed word. Core tests (accents, case, several words, empty query, images and PDFs by Source app and file name).
+- [ ] 9.3 `feat/pinning-core`: `pin` and `unpin` in the store; listing puts Pinned clips first, newest pin first; Limits never evict a Pinned clip (pinned still count toward the totals; pinned alone over the limits evicts every other clip); `deleteAll(keepingPinned:)`; the Duplicate rule is unchanged. Core tests.
+- [ ] 9.4 `feat/menu-search-spike`: a search field as the first item of the native menu that filters the rows live from memory (no async work while the menu is open); nothing else. **Manual, and a stop point:** typing must work as soon as the menu opens, Escape must close it, arrow keys and Return must still pick rows. If it doesn't, stop and choose the popover instead.
+- [ ] 9.5 `feat/menu-quick-select`: ⌘1 to ⌘9 on the first nine rows, renumbered while searching; choosing one Recopies it and closes the menu. **Manual**
+- [ ] 9.6 `feat/menu-pins`: Pinned section on top with a star and a divider; hold ⌥ for "Pin…" or "Unpin…"; the menu shows all pinned plus the 10 most recent others; searching covers the whole History. **Manual**
+- [ ] 9.7 `feat/history-search-pins`: search field in the History window; a star button per row and Pin or Unpin in the right-click menu; Pinned clips on top; ⌘1 to ⌘9; confirmation when deleting a Pinned clip; "Clear all" keeps pinned unless "Also delete pinned clips" is ticked (menu and window). **Manual**
+- [ ] 9.8 `docs/readme-search-pins`: README features, `MARKETING_VERSION` 1.1.0. Publishing 1.1.0 is a separate decision.
+
 ## Hand-back note
 
 When a step stops for the user, write this under the step: what was built and the branch; what was verified automatically; what was not, with exact steps to try and what to look for; what was tried and where it stopped; which later steps are independent.
