@@ -63,15 +63,22 @@ public actor ClipStore {
     }
 
     /// The schema version this build writes. Bump it and add a case to `migrationSteps` to change the schema.
-    static let latestSchemaVersion = 3
+    static let latestSchemaVersion = 4
+
+    private enum MigrationStep: Sendable {
+        case sql(String)
+        case code(@Sendable (OpaquePointer) throws -> Void)
+    }
 
     /// Steps that bring an older database up to `latestSchemaVersion`. Index 0 takes version 0 to 1.
-    private static let migrationSteps: [String] = [
-        "ALTER TABLE clips ADD COLUMN source_app_name TEXT",
+    private static let migrationSteps: [MigrationStep] = [
+        .sql("ALTER TABLE clips ADD COLUMN source_app_name TEXT"),
         // 2: when a Clip was pinned. NULL means not pinned.
-        "ALTER TABLE clips ADD COLUMN pinned_at REAL",
-        // 3: normalized text that Search matches against. Filled in by later steps.
-        "ALTER TABLE clips ADD COLUMN search_text TEXT",
+        .sql("ALTER TABLE clips ADD COLUMN pinned_at REAL"),
+        // 3: normalized text that Search matches against.
+        .sql("ALTER TABLE clips ADD COLUMN search_text TEXT"),
+        // 4: fill in the search text of Clips captured before it existed.
+        .code(backfillSearchText),
     ]
 
     private static func migrate(_ db: OpaquePointer) throws {
@@ -85,12 +92,40 @@ public actor ClipStore {
         for version in current..<latestSchemaVersion {
             try execute(db, "BEGIN")
             do {
-                try execute(db, migrationSteps[version])
+                switch migrationSteps[version] {
+                case .sql(let statement): try execute(db, statement)
+                case .code(let run): try run(db)
+                }
                 try execute(db, "PRAGMA user_version = \(version + 1)")
                 try execute(db, "COMMIT")
             } catch {
                 try? execute(db, "ROLLBACK")
                 throw error
+            }
+        }
+    }
+
+    /// Search text for Clips that don't have it yet. Only text-like Representations are read, so image files are not touched.
+    private static func backfillSearchText(_ db: OpaquePointer) throws {
+        var pending: [(id: String, source: String?)] = []
+        try queryRows(db, "SELECT id, source_app_name FROM clips WHERE search_text IS NULL") { stmt in
+            pending.append((String(cString: sqlite3_column_text(stmt, 0)),
+                            sqlite3_column_text(stmt, 1).map { String(cString: $0) }))
+        }
+        for clip in pending {
+            var reps: [Representation] = []
+            try queryRows(db, "SELECT kind, type_identifier, data FROM representations WHERE clip_id = ? AND kind IN ('plainText', 'link', 'file') ORDER BY position",
+                          bind: { sqlite3_bind_text($0, 1, clip.id, -1, sqliteTransient) }) { stmt in
+                let count = Int(sqlite3_column_bytes(stmt, 2))
+                let data = count == 0 ? Data() : Data(bytes: sqlite3_column_blob(stmt, 2), count: count)
+                if let kind = Representation.Kind(rawValue: String(cString: sqlite3_column_text(stmt, 0))) {
+                    reps.append(Representation(kind: kind, typeIdentifier: String(cString: sqlite3_column_text(stmt, 1)), data: data))
+                }
+            }
+            let text = SearchText.build(representations: reps, sourceAppName: clip.source)
+            try runStatement(db, "UPDATE clips SET search_text = ? WHERE id = ?") { stmt in
+                sqlite3_bind_text(stmt, 1, text, -1, sqliteTransient)
+                sqlite3_bind_text(stmt, 2, clip.id, -1, sqliteTransient)
             }
         }
     }
@@ -167,7 +202,7 @@ public actor ClipStore {
         var writtenFiles: [URL] = []
         try Self.execute(db, "BEGIN")
         do {
-            try run(db, "INSERT INTO clips (id, content_key, created_at, last_used_at, byte_count, source_app_name) VALUES (?, ?, ?, ?, ?, ?)") { stmt in
+            try run(db, "INSERT INTO clips (id, content_key, created_at, last_used_at, byte_count, source_app_name, search_text) VALUES (?, ?, ?, ?, ?, ?, ?)") { stmt in
                 sqlite3_bind_text(stmt, 1, clip.id.uuidString, -1, sqliteTransient)
                 sqlite3_bind_text(stmt, 2, clip.contentKey, -1, sqliteTransient)
                 sqlite3_bind_double(stmt, 3, clip.createdAt.timeIntervalSince1970)
@@ -178,6 +213,7 @@ public actor ClipStore {
                 } else {
                     sqlite3_bind_null(stmt, 6)
                 }
+                sqlite3_bind_text(stmt, 7, clip.searchText, -1, sqliteTransient)
             }
             for (position, rep) in clip.representations.enumerated() {
                 var fileName: String?
@@ -322,6 +358,17 @@ public actor ClipStore {
         try list().first { $0.id == id }
     }
 
+    /// Each Clip's search text, without loading any content. The menu keeps this in memory to filter instantly.
+    public func searchIndex() throws -> [UUID: String] {
+        var index: [UUID: String] = [:]
+        try query(try handle(), "SELECT id, search_text FROM clips") { stmt in
+            if let id = UUID(uuidString: String(cString: sqlite3_column_text(stmt, 0))) {
+                index[id] = sqlite3_column_text(stmt, 1).map { String(cString: $0) } ?? ""
+            }
+        }
+        return index
+    }
+
     public func count() throws -> Int {
         var n = 0
         try query(try handle(), "SELECT COUNT(*) FROM clips") { n = Int(sqlite3_column_int64($0, 0)) }
@@ -356,6 +403,19 @@ public actor ClipStore {
     }
 
     private func run(_ db: OpaquePointer, _ sql: String, bind: (OpaquePointer) -> Void) throws {
+        try Self.runStatement(db, sql, bind: bind)
+    }
+
+    private func query(
+        _ db: OpaquePointer,
+        _ sql: String,
+        bind: (OpaquePointer) -> Void = { _ in },
+        row: (OpaquePointer) -> Void
+    ) throws {
+        try Self.queryRows(db, sql, bind: bind, row: row)
+    }
+
+    private static func runStatement(_ db: OpaquePointer, _ sql: String, bind: (OpaquePointer) -> Void) throws {
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK, let stmt else {
             throw StoreError(message: String(cString: sqlite3_errmsg(db)))
@@ -367,7 +427,7 @@ public actor ClipStore {
         }
     }
 
-    private func query(
+    private static func queryRows(
         _ db: OpaquePointer,
         _ sql: String,
         bind: (OpaquePointer) -> Void = { _ in },
