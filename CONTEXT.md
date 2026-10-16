@@ -48,7 +48,7 @@ The first-run window that walks the user through clipboard access, launch at log
 _Avoid_: Onboarding, wizard, setup assistant
 
 **Pinned clip**:
-A Clip the user starred so it stays on top of History and is never deleted to make room. Pinned clips are listed first, newest pin first.
+A Clip the user starred so it stays on top of History and is never deleted to make room. Pinned clips are listed first, and inside that group the most recently used comes first.
 _Avoid_: Favorite, starred, bookmark
 
 **Search**:

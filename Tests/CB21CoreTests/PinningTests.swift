@@ -52,13 +52,36 @@ private func ids(_ store: ClipStore) async throws -> [UUID] { try await store.li
 
 // MARK: Order
 
-@Test func pinnedClipsComeFirstNewestPinFirstThenTheRestByLastUsed() async throws {
+@Test func pinnedClipsComeFirstOrderedByLastUseThenTheRestByLastUsed() async throws {
     let store = try ClipStore.inMemory()
     let a = text("a", at: 1), b = text("b", at: 2), c = text("c", at: 3), d = text("d", at: 4)
     for clip in [a, b, c, d] { try await store.insert(clip) }
-    try await store.pin(id: a.id, at: Date(timeIntervalSince1970: 100))
-    try await store.pin(id: c.id, at: Date(timeIntervalSince1970: 200))
+    try await store.pin(id: c.id, at: Date(timeIntervalSince1970: 100))
+    try await store.pin(id: a.id, at: Date(timeIntervalSince1970: 200))
+    // The newer pin (a) does not jump above c: pinned clips are ordered by last use, like the rest.
     #expect(try await ids(store) == [c.id, a.id, d.id, b.id])
+}
+
+@Test func pinningAnOlderClipLeavesTheMostRecentlyUsedPinnedClipOnTop() async throws {
+    let store = try ClipStore.inMemory()
+    let old = text("old", at: 1), recent = text("recent", at: 50)
+    try await store.insert(old)
+    try await store.insert(recent)
+    try await store.pin(id: recent.id, at: Date(timeIntervalSince1970: 60))
+    try await store.pin(id: old.id, at: Date(timeIntervalSince1970: 70))
+    #expect(try await ids(store) == [recent.id, old.id])
+}
+
+@Test func usingAPinnedClipMovesItToTheTopOfThePinnedGroup() async throws {
+    let store = try ClipStore.inMemory()
+    let a = text("a", at: 1), b = text("b", at: 2)
+    try await store.insert(a)
+    try await store.insert(b)
+    try await store.pin(id: a.id, at: Date(timeIntervalSince1970: 10))
+    try await store.pin(id: b.id, at: Date(timeIntervalSince1970: 20))
+    #expect(try await ids(store) == [b.id, a.id])
+    try await store.recopy(id: a.id, at: Date(timeIntervalSince1970: 500))
+    #expect(try await ids(store) == [a.id, b.id])
 }
 
 @Test func recopyingAnUnpinnedClipNeverMovesItAbovePinnedOnes() async throws {

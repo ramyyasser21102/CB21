@@ -1,4 +1,5 @@
 import AppKit
+import CB21Core
 
 /// The search row at the top of the menu: a real search field inside a menu item. The menu window can become key,
 /// so the field takes focus as soon as the menu opens and typing, arrow keys and Return all keep working.
@@ -35,6 +36,19 @@ final class MenuSearchView: NSView, NSSearchFieldDelegate {
             window.makeFirstResponder(self.field)
         }
         CFRunLoopWakeUp(CFRunLoopGetMain())
+    }
+
+    /// ⌘1 to ⌘9 while the search field has focus: asked to pick that row; true means it did.
+    var onQuickSelect: ((Int) -> Bool)?
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.modifierFlags.contains(.command) { KeyLog.write("MenuSearchView.performKeyEquivalent \(KeyLog.describe(event))") }
+        guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+              let key = event.charactersIgnoringModifiers, let row = QuickSelect.row(forKey: key),
+              onQuickSelect?(row) == true else {
+            return super.performKeyEquivalent(with: event)
+        }
+        return true
     }
 
     func controlTextDidChange(_ obj: Notification) {

@@ -45,7 +45,7 @@ final class HistoryModel {
                 pinnedAt: pinned ? (row.pinnedAt ?? date) : nil, lastUsedAt: row.lastUsedAt
             )
         }
-        rows = PinOrder.sorted(updated, isPinned: \.isPinned, pinnedAt: \.pinnedAt, lastUsedAt: \.lastUsedAt)
+        rows = PinOrder.sorted(updated, isPinned: \.isPinned, lastUsedAt: \.lastUsedAt)
     }
 
     /// The Clip used most recently, pinned or not. It gets the dot.
