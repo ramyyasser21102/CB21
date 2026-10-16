@@ -6,10 +6,11 @@ import CB21Core
 struct DetailPane: View {
     let selection: Set<UUID>
     let load: (UUID) async -> Clip?
+    let folderAccess: FolderAccessModel
 
     var body: some View {
         if selection.count == 1, let id = selection.first {
-            ClipDetail(id: id, load: load)
+            ClipDetail(id: id, load: load, folderAccess: folderAccess)
         } else {
             ContentUnavailableView(
                 selection.isEmpty ? "Select a clip" : "\(selection.count) clips selected",
@@ -29,6 +30,10 @@ private struct Loaded: Equatable {
 private struct ClipDetail: View {
     let id: UUID
     let load: (UUID) async -> Clip?
+    let folderAccess: FolderAccessModel
+    /// Folders that must be allowed before this file clip may be read. Reading it earlier would make macOS show a
+    /// surprise permission prompt.
+    @State private var locked: [ProtectedFolder] = []
     @State private var loaded: Loaded?
     @State private var preview: NSImage?
     @State private var previewState = PreviewState.none
@@ -38,7 +43,9 @@ private struct ClipDetail: View {
 
     var body: some View {
         Group {
-            if let loaded, loaded.id == id {
+            if !locked.isEmpty {
+                lockedPlaceholder
+            } else if let loaded, loaded.id == id {
                 content(loaded)
             } else if missing {
                 ContentUnavailableView("Clip not found", systemImage: "questionmark.folder")
@@ -47,11 +54,23 @@ private struct ClipDetail: View {
             }
         }
         // Reading and decoding happens off the main thread, so a big image or PDF can't freeze the window.
-        .task(id: id) {
+        .task(id: TaskKey(id: id, accessRevision: folderAccess.revision)) {
             missing = false
+            locked = []
             preview = nil
             previewState = .none
             guard let clip = await load(id) else { missing = true; return }
+            // Decide from the stored text, before touching the file in any way.
+            if let text = clip.fileURLText {
+                let blocked = FileAccessGuard.requiredFolders(forFileURLText: text).filter { folder in
+                    let state = folderAccess.state(for: folder)
+                    return state != .allowed && state != .missing
+                }
+                if !blocked.isEmpty {
+                    locked = blocked
+                    return
+                }
+            }
             let result = await Task.detached(priority: .userInitiated) {
                 Loaded(id: id, displayText: clip.displayText(), metadata: clip.metadata())
             }.value
@@ -64,6 +83,29 @@ private struct ClipDetail: View {
                 preview = image
                 previewState = image == nil ? .unavailable : .ready
             }
+        }
+    }
+
+    private struct TaskKey: Equatable {
+        let id: UUID
+        let accessRevision: Int
+    }
+
+    private var lockedPlaceholder: some View {
+        let names = locked.map(\.displayName)
+        let list = names.count > 1 ? names.dropLast().joined(separator: ", ") + " and " + (names.last ?? "") : (names.first ?? "")
+        return ContentUnavailableView {
+            Label("This file is in \(list)", systemImage: "lock")
+        } description: {
+            Text("macOS asks before an app may look inside \(list). Allow access to see this file's details and preview.")
+        } actions: {
+            Button("Allow Access…") {
+                Task { await folderAccess.requestAccess(for: locked) }
+            }
+            Button("Open System Settings") {
+                if let url = URL(string: SystemSettingsLink.filesAndFolders) { NSWorkspace.shared.open(url) }
+            }
+            .buttonStyle(.link)
         }
     }
 
