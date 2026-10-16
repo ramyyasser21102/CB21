@@ -123,12 +123,15 @@ struct HistoryView: View {
                 ContentUnavailableView("No clips yet", systemImage: "doc.on.clipboard",
                                        description: Text("Things you copy will show up here."))
             } else {
+                // The split view doesn't stretch by itself: without the flexible frames it kept its small natural
+                // height and sat at the bottom of a large window.
                 HSplitView {
                     listPane
-                        .frame(minWidth: 300, idealWidth: 360)
+                        .frame(minWidth: 300, idealWidth: 360, maxWidth: .infinity, maxHeight: .infinity)
                     DetailPane(selection: selection, load: loadClip, folderAccess: folderAccess)
-                        .frame(minWidth: 280, idealWidth: 440)
+                        .frame(minWidth: 280, idealWidth: 440, maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
         .frame(minWidth: minimumSize.width, idealWidth: idealSize.width, maxWidth: .infinity,
