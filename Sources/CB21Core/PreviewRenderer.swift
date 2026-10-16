@@ -75,6 +75,12 @@ public enum PreviewRenderer {
 }
 
 extension Clip {
+    /// The stored text of a file Clip's address, exactly as copied. Reading it touches nothing on disk.
+    public var fileURLText: String? {
+        guard preferred.kind == .file else { return nil }
+        return String(decoding: preferred.data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// Where a file Clip points, when it has a file Representation.
     public var fileURL: URL? {
         guard preferred.kind == .file else { return nil }

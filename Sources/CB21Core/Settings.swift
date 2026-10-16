@@ -12,6 +12,9 @@ public struct SettingsValues: Sendable, Equatable, Codable {
     public var menuShortcut: Shortcut?
     /// True once the user has finished or skipped the Welcome window, so it stops opening by itself.
     public var welcomeCompleted = false
+    /// True once the user has pressed Allow for folder access. From then on macOS has decided, so checking quietly at
+    /// launch can't make it prompt.
+    public var folderAccessRequested = false
 
     public init() {}
 
@@ -22,6 +25,7 @@ public struct SettingsValues: Sendable, Equatable, Codable {
         pauseShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .pauseShortcut)
         menuShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .menuShortcut)
         welcomeCompleted = try c.decodeIfPresent(Bool.self, forKey: .welcomeCompleted) ?? false
+        folderAccessRequested = try c.decodeIfPresent(Bool.self, forKey: .folderAccessRequested) ?? false
     }
 }
 

@@ -46,5 +46,6 @@ public enum ClipboardAccess: Sendable, Equatable, CaseIterable {
 public enum SystemSettingsLink {
     public static let pasteboard = "x-apple.systempreferences:com.apple.preference.security?Privacy_Pasteboard"
     public static let privacy = "x-apple.systempreferences:com.apple.preference.security?Privacy"
+    public static let filesAndFolders = "x-apple.systempreferences:com.apple.preference.security?Privacy_FilesAndFolders"
     public static let loginItems = "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
 }
