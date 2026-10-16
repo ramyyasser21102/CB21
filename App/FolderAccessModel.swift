@@ -15,6 +15,8 @@ final class FolderAccessModel {
     private(set) var isChecking = false
 
     private let settings: SettingsModel
+    /// Called with every change, so code that can't read this main-thread model can keep its own copy.
+    var onChange: (([ProtectedFolder: FolderAccessState]) -> Void)?
 
     init(settings: SettingsModel) {
         self.settings = settings
@@ -50,6 +52,7 @@ final class FolderAccessModel {
             if states[folder] != state {
                 states[folder] = state
                 revision += 1
+                onChange?(states)
             }
         }
     }

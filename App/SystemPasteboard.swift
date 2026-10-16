@@ -4,6 +4,17 @@ import CB21Core
 /// `NSPasteboard.general` as seen by `CaptureEngine`.
 final class SystemPasteboard: PasteboardReading, @unchecked Sendable {
     private let pasteboard = NSPasteboard.general
+    private let lock = NSLock()
+    private var folderStates: [ProtectedFolder: FolderAccessState] = [:]
+
+    /// A copy of what is known about folder access, kept here because `write` runs off the main thread.
+    func setFolderStates(_ states: [ProtectedFolder: FolderAccessState]) {
+        lock.withLock { folderStates = states }
+    }
+
+    private func folderState(_ folder: ProtectedFolder) -> FolderAccessState? {
+        lock.withLock { folderStates[folder] }
+    }
 
     var changeCount: Int { pasteboard.changeCount }
 
@@ -49,11 +60,26 @@ final class SystemPasteboard: PasteboardReading, @unchecked Sendable {
 
     func write(_ clip: Clip) -> Int {
         pasteboard.clearContents()
+        if let url = existingFileURL(for: clip) {
+            // A proper file reference, so other apps (sandboxed ones too) can use the file.
+            pasteboard.writeObjects([url as NSURL])
+            return pasteboard.changeCount
+        }
         let item = NSPasteboardItem()
         for rep in clip.representations {
             item.setData(rep.data, forType: NSPasteboard.PasteboardType(rep.typeIdentifier))
         }
         pasteboard.writeObjects([item])
         return pasteboard.changeCount
+    }
+
+    /// The file a file Clip points at, but only if looking is safe: the file is outside Desktop, Documents and
+    /// Downloads, or those folders are allowed. Otherwise nil, and the clip is written as it was copied.
+    private func existingFileURL(for clip: Clip) -> URL? {
+        guard let text = clip.fileURLText,
+              FileAccessGuard.mayRead(fileURLText: text, state: { folderState($0) }),
+              let url = clip.fileURL,
+              FileManager.default.fileExists(atPath: url.path) else { return nil }
+        return url
     }
 }

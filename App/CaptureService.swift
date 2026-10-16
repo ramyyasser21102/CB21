@@ -225,6 +225,7 @@ final class CaptureService {
 
     func start() {
         guard task == nil else { return }
+        folderAccess.onChange = { [pasteboard = systemPasteboard] in pasteboard.setFolderStates($0) }
         folderAccess.refreshQuietly()
         let dir = Self.dataDirectory
         do {
