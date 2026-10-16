@@ -98,7 +98,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             if let previousPinned, previousPinned != row.isPinned { result.append(.separator()) }
             previousPinned = row.isPinned
             let primary = clipItem(row)
-            if row.id == mostRecent { markAsMostRecent(primary) }
+            markState(primary, pinned: row.isPinned, mostRecent: row.id == mostRecent)
             let alternate = pinToggleItem(for: row, title: primary.title)
             if let key = QuickSelect.key(forRow: index) {
                 primary.keyEquivalent = key
@@ -120,7 +120,6 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         }
         alternate.isAlternate = true
         alternate.keyEquivalentModifierMask = [.option]
-        alternate.image = NSImage(systemSymbolName: row.isPinned ? "star.slash" : "star", accessibilityDescription: nil)
         return alternate
     }
 
@@ -202,36 +201,43 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         } else if let symbol {
             entry.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         }
-        if row.isPinned { entry.image = Self.starred(entry.image) }
         entry.setAccessibilityLabel(row.isPinned ? "Pinned. \(title)" : title)
         return entry
     }
 
-    /// A dot in the state column marks the most recently used Clip, as in the History window.
-    private func markAsMostRecent(_ entry: NSMenuItem) {
-        let config = NSImage.SymbolConfiguration(pointSize: 7, weight: .regular)
-        let dot = NSImage(systemSymbolName: "circle.fill", accessibilityDescription: "Most recent")?
-            .withSymbolConfiguration(config)
-        entry.onStateImage = dot
+    /// The state column is what this menu reliably draws (row images are not drawn on recent macOS versions), so it
+    /// carries both marks: a star for a Pinned clip, a dot for the most recently used one, and both together.
+    private func markState(_ entry: NSMenuItem, pinned: Bool, mostRecent: Bool) {
+        guard pinned || mostRecent else { return }
         entry.state = .on
-        entry.toolTip = "Most recent clip"
+        entry.onStateImage = Self.stateImage(pinned: pinned, mostRecent: mostRecent)
+        entry.toolTip = [pinned ? "Pinned" : nil, mostRecent ? "Most recent clip" : nil].compactMap { $0 }.joined(separator: ", ")
+        let spoken = [pinned ? "Pinned" : nil, mostRecent ? "Most recent" : nil].compactMap { $0 }.joined(separator: ", ")
+        entry.setAccessibilityLabel("\(spoken). \(entry.title)")
     }
 
-    /// The row's own icon with a small star in the corner. A text row has no icon, so it just gets the star.
-    private static func starred(_ base: NSImage?) -> NSImage {
-        let star = NSImage(systemSymbolName: "star.fill", accessibilityDescription: "Pinned")
-        guard let base else { return star ?? NSImage() }
-        let size = NSSize(width: 22, height: 18)
-        let result = NSImage(size: size, flipped: false) { rect in
-            let iconSize = NSSize(width: min(base.size.width, 16), height: min(base.size.height, 16))
-            base.draw(in: NSRect(x: 0, y: (rect.height - iconSize.height) / 2, width: iconSize.width, height: iconSize.height))
-            if let star {
-                let config = NSImage.SymbolConfiguration(pointSize: 8, weight: .bold)
-                star.withSymbolConfiguration(config)?.draw(in: NSRect(x: rect.width - 10, y: rect.height - 10, width: 10, height: 10))
+    private static func stateImage(pinned: Bool, mostRecent: Bool) -> NSImage {
+        let size = NSSize(width: 14, height: 14)
+        let image = NSImage(size: size, flipped: false) { rect in
+            func symbol(_ name: String, points: CGFloat) -> NSImage? {
+                NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+                    .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: points, weight: .semibold))
+            }
+            if pinned {
+                let star = symbol("star.fill", points: 11)
+                star?.draw(in: NSRect(x: 0, y: 1, width: 12, height: 12))
+                if mostRecent {
+                    // A small dot in the corner of the star, for a clip that is both.
+                    symbol("circle.fill", points: 5)?.draw(in: NSRect(x: rect.width - 6, y: 0, width: 6, height: 6))
+                }
+            } else {
+                symbol("circle.fill", points: 8)?.draw(in: NSRect(x: 2, y: 2, width: 10, height: 10))
             }
             return true
         }
-        return result
+        // A template image is tinted by the menu, so it is visible on light and dark menus alike.
+        image.isTemplate = true
+        return image
     }
 
     private func note(_ text: String) -> NSMenuItem {
