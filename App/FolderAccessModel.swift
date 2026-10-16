@@ -28,8 +28,9 @@ final class FolderAccessModel {
         ProtectedFolder.allCases.allSatisfy { states[$0] == .allowed || states[$0] == .missing }
     }
 
-    /// At launch, only if the user has pressed Allow before. macOS has decided by then, so this can't prompt.
-    func quietCheckAtLaunch() {
+    /// Only if the user has pressed Allow before (at launch, or when Settings opens). macOS has decided by then,
+    /// so this can't prompt.
+    func refreshQuietly() {
         guard settings.values.folderAccessRequested else { return }
         Task { await check(ProtectedFolder.allCases) }
     }
