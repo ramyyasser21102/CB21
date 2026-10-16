@@ -166,7 +166,7 @@ Order: the saved flag and the page flow in Core (8.1–8.2), then the window (8.
 - [x] 8.6 `feat/welcome-shortcuts`: the shortcuts page with the three recorders, styled for the dark window. **Manual**
   - Verified automatically: builds and launches; the recorders are the same component and the same tested validation as Settings (`ShortcutRecorder` now has a dark style for the Welcome window).
   - **Manual:** Welcome page 4 lists "Open history", "Open menu bar list" and "Pause / resume capture" as white outline buttons on black. Click one and press e.g. Ctrl-Opt-V: it shows ⌃⌥V and works from any app straight away. A refused shortcut (Cmd-Space, no modifier, one another app owns, or one equal to another cb21 shortcut) shows a short message in grey with a warning sign. "Reset" clears it. While recording, the Return and arrow keys must not move the Welcome pages. Whatever you set here also shows in Settings > Shortcuts.
-- [ ] 8.7 `docs/readme-welcome`: README mentions the Welcome window.
+- [x] 8.7 `docs/readme-welcome`: README mentions the Welcome window.
 
 ## Hand-back note
 
