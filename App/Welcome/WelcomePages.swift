@@ -149,6 +149,91 @@ struct WelcomeClipboardPage: View {
     }
 }
 
+struct WelcomeFilesPage: View {
+    let service: CaptureService
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var access: FolderAccessModel { service.folderAccess }
+
+    var body: some View {
+        WelcomePageLayout(
+            title: "Your files",
+            message: "CB21 shows details and previews for files you copy. macOS asks before an app may look inside Desktop, Documents and Downloads, so it's best to answer now.",
+            icon: { symbol("folder") },
+            extra: {
+                VStack(spacing: 12) {
+                    VStack(spacing: 0) {
+                        ForEach(Array(ProtectedFolder.allCases.enumerated()), id: \.element) { index, folder in
+                            if index > 0 { Divider().overlay(WelcomeStyle.faint) }
+                            row(folder)
+                        }
+                    }
+                    .frame(maxWidth: 420)
+                    .background(RoundedRectangle(cornerRadius: 12).stroke(WelcomeStyle.faint, lineWidth: 1))
+
+                    HStack(spacing: 12) {
+                        if !access.allAllowed {
+                            Button(access.isChecking ? "Waiting for macOS…" : "Allow Access") {
+                                Task { await access.requestAccess() }
+                            }
+                            .buttonStyle(WelcomeOutlineButtonStyle())
+                            .disabled(access.isChecking)
+                        }
+                        if ProtectedFolder.allCases.contains(where: { access.state(for: $0) == .denied }) {
+                            Button("Open System Settings") {
+                                if let url = URL(string: SystemSettingsLink.filesAndFolders) { NSWorkspace.shared.open(url) }
+                            }
+                            .buttonStyle(WelcomeQuietButtonStyle())
+                        }
+                    }
+                    Text("You can skip this. Files in these folders just won't show details until you allow them.")
+                        .font(.system(size: 13)).foregroundStyle(WelcomeStyle.secondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: 400)
+                }
+            }
+        )
+    }
+
+    private func row(_ folder: ProtectedFolder) -> some View {
+        let state = access.state(for: folder)
+        return HStack(spacing: 12) {
+            Image(systemName: icon(for: state))
+                .font(.system(size: 18))
+                .foregroundStyle(state == .allowed ? Color.white : WelcomeStyle.secondary)
+                .contentTransition(reduceMotion ? .identity : .symbolEffect(.replace))
+                .symbolEffect(.bounce, options: reduceMotion ? .nonRepeating.speed(0) : .nonRepeating, value: state == .allowed)
+                .frame(width: 24)
+                .accessibilityHidden(true)
+            Text(folder.displayName).font(.system(size: 15, weight: .medium)).foregroundStyle(.white)
+            Spacer()
+            Text(label(for: state)).font(.system(size: 14)).foregroundStyle(WelcomeStyle.secondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func icon(for state: FolderAccessState?) -> String {
+        switch state {
+        case .allowed: "checkmark.circle.fill"
+        case .denied: "xmark.circle"
+        case .missing: "minus.circle"
+        case nil: "circle.dashed"
+        }
+    }
+
+    private func label(for state: FolderAccessState?) -> String {
+        switch state {
+        case .allowed: "Allowed"
+        case .denied: "Not allowed"
+        case .missing: "Not on this Mac"
+        case nil: "Not asked yet"
+        }
+    }
+}
+
 struct WelcomeLoginPage: View {
     @State private var status = LaunchAtLogin.status
     @State private var error: String?

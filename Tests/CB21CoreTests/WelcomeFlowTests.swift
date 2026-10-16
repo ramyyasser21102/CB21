@@ -1,8 +1,8 @@
 import Testing
 @testable import CB21Core
 
-@Test func flowHasTheFivePagesInOrder() {
-    #expect(WelcomeFlow.Page.allCases == [.welcome, .clipboard, .login, .shortcuts, .privacy])
+@Test func flowHasTheSixPagesInOrder() {
+    #expect(WelcomeFlow.Page.allCases == [.welcome, .clipboard, .files, .login, .shortcuts, .privacy])
 }
 
 @Test func flowStartsOnTheWelcomePageNotFinished() {
@@ -36,7 +36,7 @@ import Testing
 @Test func backGoesToThePreviousPageAndDoesNothingOnTheFirst() {
     var flow = WelcomeFlow(page: .login)
     flow.back()
-    #expect(flow.page == .clipboard)
+    #expect(flow.page == .files)
     #expect(flow.lastMove == .backward)
     flow = WelcomeFlow()
     flow.back()
@@ -47,7 +47,7 @@ import Testing
 @Test func skippingAPageMovesOnAndRemembersWhichWereSkipped() {
     var flow = WelcomeFlow(page: .clipboard)
     flow.skipPage()
-    #expect(flow.page == .login)
+    #expect(flow.page == .files)
     flow.next()
     #expect(flow.skippedPages == [.clipboard])
 }
@@ -64,13 +64,22 @@ import Testing
     #expect(flow.isFinished)
 }
 
-@Test func progressRunsFromOneFifthToComplete() {
+@Test func progressRunsFromOneSixthToComplete() {
     var flow = WelcomeFlow()
-    #expect(flow.progress == 0.2)
+    #expect(abs(flow.progress - 1.0 / 6.0) < 0.0001)
     flow = WelcomeFlow(page: .privacy)
     #expect(flow.progress == 1.0)
-    #expect(flow.pageNumber == 5)
-    #expect(flow.pageCount == 5)
+    #expect(flow.pageNumber == 6)
+    #expect(flow.pageCount == 6)
+}
+
+@Test func theFilesPageComesRightAfterClipboardAccessAndCanBeSkipped() {
+    var flow = WelcomeFlow(page: .clipboard)
+    flow.next()
+    #expect(flow.page == .files)
+    flow.skipPage()
+    #expect(flow.page == .login)
+    #expect(flow.skippedPages == [.files])
 }
 
 @Test func finishedFlowIgnoresFurtherMoves() {

@@ -2,7 +2,7 @@
 /// Pure state: the window draws it and the app saves `welcomeCompleted` once `isFinished` turns true.
 public struct WelcomeFlow: Sendable, Equatable {
     public enum Page: Int, CaseIterable, Sendable {
-        case welcome, clipboard, login, shortcuts, privacy
+        case welcome, clipboard, files, login, shortcuts, privacy
     }
 
     /// Which way the last move went, so the window can slide pages the right way.

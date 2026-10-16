@@ -50,6 +50,7 @@ struct WelcomeView: View {
         switch page {
         case .welcome: WelcomeIntroPage()
         case .clipboard: WelcomeClipboardPage(service: service)
+        case .files: WelcomeFilesPage(service: service)
         case .login: WelcomeLoginPage()
         case .shortcuts: WelcomeShortcutsPage(service: service)
         case .privacy: WelcomePrivacyPage()
