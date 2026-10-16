@@ -29,7 +29,7 @@ public enum ShortcutProblem: Sendable, Equatable {
 }
 
 /// Checks a shortcut before it is bound. macOS has no API listing other apps' shortcuts,
-/// so only system-reserved shortcuts and cb21's own can be detected.
+/// so only system-reserved shortcuts and CB21's own can be detected.
 public enum ShortcutValidator {
     public static func validate(_ shortcut: Shortcut, takenByOtherActions: [Shortcut] = []) -> ShortcutProblem? {
         if shortcut.modifiers.isDisjoint(with: [.command, .control, .option]) {

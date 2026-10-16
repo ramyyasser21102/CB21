@@ -3,7 +3,7 @@ import Testing
 @testable import CB21Core
 
 private func freshDefaults() -> UserDefaults {
-    let name = "cb21-test-\(UUID().uuidString)"
+    let name = "CB21-test-\(UUID().uuidString)"
     let defaults = UserDefaults(suiteName: name)!
     defaults.removePersistentDomain(forName: name)
     return defaults

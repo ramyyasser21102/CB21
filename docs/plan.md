@@ -1,4 +1,4 @@
-# cb21 — Development plan
+# CB21 — Development plan
 
 Source of truth for order and status. Rules for working through it are in `CLAUDE.md`. Terms are defined in `CONTEXT.md`.
 
@@ -8,7 +8,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 ## Technical decisions
 
 - SwiftPM package plus a generated Xcode project (XcodeGen); the `.xcodeproj` is git-ignored.
-- Two targets: `CB21Core` (no UI, Swift Testing) and `cb21` (menu bar, History window, Settings, pasteboard watcher).
+- Two targets: `CB21Core` (no UI, Swift Testing) and `CB21` (menu bar, History window, Settings, pasteboard watcher).
 - Swift 6 language mode. Warnings are errors in `CB21Core`. No SwiftLint or SwiftFormat.
 - macOS 14 minimum. Ad-hoc signing, no notarization (ADR-0002).
 - Phase gate: every step merged, `swift test` and `xcodebuild` pass on `main`, and the phase's manual checklist is done by the user (phases 3–6).
@@ -21,10 +21,10 @@ Each step is one branch. **Manual** marks what only the user can verify.
 ## Phase 1 — Foundation
 
 - [x] 1.1 `feat/package-skeleton`: `Package.swift` with `CB21Core` and its test target, Swift 6 mode, one passing test.
-- [x] 1.2 `feat/app-target`: XcodeGen `project.yml`, `cb21` app target, `LSUIElement`, ad-hoc signing, builds with `xcodebuild`.
+- [x] 1.2 `feat/app-target`: XcodeGen `project.yml`, `CB21` app target, `LSUIElement`, ad-hoc signing, builds with `xcodebuild`.
 - [x] 1.3 `feat/menu-bar-stub`: menu bar icon with a stub menu (Quit only). **Manual:** icon appears, menu opens.
   - Verified automatically: builds, launches, process stays running for 4 s, no crash report.
-  - **Manual:** run `open` on the built `cb21.app` (Debug build in DerivedData). Check that a clipboard icon appears in the menu bar, no Dock icon shows, and the menu offers Quit cb21 (Cmd-Q).
+  - **Manual:** run `open` on the built `CB21.app` (Debug build in DerivedData). Check that a clipboard icon appears in the menu bar, no Dock icon shows, and the menu offers Quit CB21 (Cmd-Q).
 
 ## Phase 2 — Storage core (`CB21Core`, test-first)
 
@@ -50,10 +50,10 @@ Each step is one branch. **Manual** marks what only the user can verify.
   - **Manual:** run the Debug build, copy 3 or 4 different things (text, a link, an image, a file in Finder). Open the menu: newest first, text truncated, link and file icons, image thumbnail. Click an older item, paste somewhere: it pastes, moves to the top and does not appear twice.
 - [x] 3.5 `feat/pasteboard-access-notice`: first-launch message and System Settings link when access is denied. **Manual**
   - Verified automatically: builds. The denied state needs macOS 15.4 or later (`accessBehavior`), checked with `#available`; the System Settings link opens the general Privacy & Security pane.
-  - **Manual:** in System Settings > Privacy & Security > "Paste from Other Apps", set cb21 to Deny (it appears after cb21 first reads the clipboard). The menu should show "cb21 can't read the clipboard" with a working Settings link. Setting it back to Allow should clear the message within a second.
+  - **Manual:** in System Settings > Privacy & Security > "Paste from Other Apps", set CB21 to Deny (it appears after CB21 first reads the clipboard). The menu should show "CB21 can't read the clipboard" with a working Settings link. Setting it back to Allow should clear the message within a second.
 - [x] 3.6 `feat/db-notice`: one-time notices for oversized Clips and database recovery in the menu. **Manual**
   - Verified automatically: real app with a corrupt `history.sqlite` moved it aside and started empty; a 105 MB copy was rejected and stored nothing; a small copy afterwards was stored.
-  - **Manual:** the two menu messages themselves. Put garbage in `~/Library/Application Support/cb21/history.sqlite` (with cb21 quit) and launch: the menu shows "History was damaged and has been reset" with Dismiss. The oversized message appears once Settings can lower the storage Limit (step 5.2); check it then.
+  - **Manual:** the two menu messages themselves. Put garbage in `~/Library/Application Support/cb21/history.sqlite` (with CB21 quit) and launch: the menu shows "History was damaged and has been reset" with Dismiss. The oversized message appears once Settings can lower the storage Limit (step 5.2); check it then.
 
 ## Phase 4 — History window and deletion
 
@@ -89,7 +89,7 @@ Each step is one branch. **Manual** marks what only the user can verify.
 ## Phase 5b — Accessibility tweaks (requested after Phase 5)
 
 - [x] S3 `chore/assets`: move and convert the provided artwork: menu bar sprites (`Default.svg`, `Paused.svg`), app icon and README image (`CB21.png`).
-  - Sources live in `design/` (menu bar SVGs) and `docs/assets/cb21.png` (README image and icon source). `swift scripts/make-assets.swift` regenerates the asset catalog: black template menu bar images at 18 pt (1x-3x) and the app icon on the 1024 grid. Note `cb21.png` is 828x825, not square, so it is scaled to fit; a 1024x1024 export would be crisper for the large icon sizes.
+  - Sources live in `design/` (menu bar SVGs) and `docs/assets/CB21.png` (README image and icon source). `swift scripts/make-assets.swift` regenerates the asset catalog: black template menu bar images at 18 pt (1x-3x) and the app icon on the 1024 grid. Note `CB21.png` is 828x825, not square, so it is scaled to fit; a 1024x1024 export would be crisper for the large icon sizes.
 - [x] 5.7 `feat/status-item-menu`: replace SwiftUI `MenuBarExtra` with an `NSStatusItem` and `NSMenu` so the menu can be opened from code; use the sprites, swapping on Pause. **Manual**
   - Verified automatically: builds, launches, capture still works through the new service start; screenshots and accessibility are not permitted for the agent, so the icon and menu are unseen.
   - **Manual:** the menu bar shows the new clipboard sprite (Default); the menu has the same items as before, rebuilt fresh on every open; image clips show a thumbnail, links and files an icon. Pausing swaps the icon to the Paused sprite and back on resume. Light and dark menu bar both look right (template image).
@@ -117,17 +117,19 @@ Each step is one branch. **Manual** marks what only the user can verify.
   - Verified automatically: builds and launches; the generated images look right (viewed).
   - **Manual:** open the Welcome window: the rounded gray app image eases up into place, smoothly and only slightly, with no wipe.
 
+- [x] S9 `chore/rename-to-CB21`: the app is named CB21 (short for ClipBoard 21), not cb21: window titles, menus, messages, docs, the project, package, scheme, target, executable and `CB21.app`, the release zip name and the artwork file (`docs/assets/CB21.png`). Deliberately left lowercase because changing them would break existing installs: the bundle id `com.ramyyasser.cb21` (settings, login item and clipboard permission are tied to it), the saved-settings key `cb21.settings`, and the data folder `~/Library/Application Support/cb21/` (existing History). Verified: full check, built bundle name and bundle id, a launch that captures a copy.
+
 ## Phase 6 — Release
 
 - [x] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**
   - Verified automatically: builds. Not exercised, because registering would add a login item to your Mac from a build folder.
-  - **Manual:** Settings > General > "Launch at login" is off by default. Turn it on: it should appear in System Settings > General > Login Items (an unsigned build may need approval there, and the app says so). Log out and in to confirm cb21 starts. Turn it off and confirm it is removed.
+  - **Manual:** Settings > General > "Launch at login" is off by default. Turn it on: it should appear in System Settings > General > Login Items (an unsigned build may need approval there, and the app says so). Log out and in to confirm CB21 starts. Turn it off and confirm it is removed.
 - [x] 6.2 `feat/app-icon`: app icon from `CB21.png` (menu bar sprites are done in S3). Done with S3 (AppIcon in the catalog; verified in the built bundle).
 - [x] 6.3 `docs/readme`: README with install steps, the Gatekeeper instructions and the privacy statement.
   - The Gatekeeper steps follow macOS 15+ behavior (Open Anyway in Privacy & Security, or clearing the quarantine flag). **Manual:** read it once; the install steps can only be proven on a clean download (see 6.4).
 - [x] 6.4 `feat/release-build`: script that builds the ad-hoc signed zip for GitHub Releases. **Manual:** open the zip on a clean download.
-  - Verified automatically: `scripts/build-release.sh` builds a universal (arm64 + x86_64) Release app, ad-hoc signs it, zips it to `dist/cb21-1.0.0.zip` with a SHA-256 file; a fresh unzip launches and captures a copy. `spctl` rejects it, as expected without notarization.
-  - **Manual:** on a clean download (or after `xattr -w com.apple.quarantine "0081;00000000;Safari;" cb21.app`), follow the README: first launch is blocked, Open Anyway works, the icon appears. Then publish the zip as a GitHub Release (not done: it is outward-facing).
+  - Verified automatically: `scripts/build-release.sh` builds a universal (arm64 + x86_64) Release app, ad-hoc signs it, zips it to `dist/CB21-1.0.0.zip` with a SHA-256 file; a fresh unzip launches and captures a copy. `spctl` rejects it, as expected without notarization.
+  - **Manual:** on a clean download (or after `xattr -w com.apple.quarantine "0081;00000000;Safari;" CB21.app`), follow the README: first launch is blocked, Open Anyway works, the icon appears. Then publish the zip as a GitHub Release (not done: it is outward-facing).
 
 ## Phase 7 — Inspect clips (CB-7)
 
@@ -162,16 +164,16 @@ Order: the saved flag and the page flow in Core (8.1–8.2), then the window (8.
   - Verified automatically: 10 Core tests (page order, start state, walking forward, finishing on the last page, back, skipping and remembering skipped pages, closing at any step, progress, a finished flow ignores more moves). Nothing visible yet.
 - [x] 8.3 `feat/welcome-window`: fixed-size black window with hidden title bar, always dark; page container with slide and fade transitions, stretching progress dots, the logo draw-in; Reduce Motion gives cross-fades; Welcome and Privacy pages; opens automatically when the flag is false and from "Welcome…" in the menu and Settings. **Manual**
   - Verified automatically: builds; launches 5 times in a row without crashing or a crash report; the page logic is the tested `WelcomeFlow`. I could not see the window. The pages for clipboard access, login and shortcuts are text-only for now; 8.4 to 8.6 add their controls.
-  - **Manual:** with cb21 never having finished the Welcome (your install qualifies), launching it opens a black 560 x 640 window with no title bar text, in dark style even if your Mac is in light mode. Check: the logo wipes in; "Get started" slides to the next page and "Back" slides the other way; the dots stretch to the current step; "Skip" appears only on the middle three pages; Return continues and the arrow keys go back. Closing the window with the red button at any step marks it done: quit and relaunch, it must not open again. Reopen it from the menu ("Welcome…") and from Settings > General > "Show Welcome…". Turn on System Settings > Accessibility > Display > Reduce motion: pages should cross-fade instead of sliding.
+  - **Manual:** with CB21 never having finished the Welcome (your install qualifies), launching it opens a black 560 x 640 window with no title bar text, in dark style even if your Mac is in light mode. Check: the logo wipes in; "Get started" slides to the next page and "Back" slides the other way; the dots stretch to the current step; "Skip" appears only on the middle three pages; Return continues and the arrow keys go back. Closing the window with the red button at any step marks it done: quit and relaunch, it must not open again. Reopen it from the menu ("Welcome…") and from Settings > General > "Show Welcome…". Turn on System Settings > Accessibility > Display > Reduce motion: pages should cross-fade instead of sliding.
 - [x] 8.4 `feat/welcome-clipboard`: the clipboard page: reads the clipboard once to trigger the system prompt, live state (allowed, ask, denied, unknown before 15.4) with the explanation text in Core (tested), check pop, "Open System Settings". **Manual**
   - Verified automatically: the four access states, which ones need System Settings, which trigger the prompt and the wording are Core tests (6); builds and launches. The SDK header says a never-asked app reports `default` and moves to `ask` after its first alert, so the plan's three states became four. The Settings link `Privacy_Pasteboard` comes from the system's own Settings extension. The menu notice now uses the same link.
-  - **Manual:** on a Mac running macOS 15.4 or later, go to the Welcome page 2: about a second after it appears macOS should show its "paste from other apps" alert for cb21 (only if cb21 was never asked before; reset by removing cb21 from Privacy & Security > Paste from Other Apps, or use a fresh user). Choose Always Allow: the card changes to "Allowed" with a check that pops in. Choose a different option or change it in System Settings: the card says what is wrong and "Open System Settings" opens the Paste from Other Apps pane. Changing it there and coming back updates the card within a second. On older macOS the card says it can't be checked.
+  - **Manual:** on a Mac running macOS 15.4 or later, go to the Welcome page 2: about a second after it appears macOS should show its "paste from other apps" alert for CB21 (only if CB21 was never asked before; reset by removing CB21 from Privacy & Security > Paste from Other Apps, or use a fresh user). Choose Always Allow: the card changes to "Allowed" with a check that pops in. Choose a different option or change it in System Settings: the card says what is wrong and "Open System Settings" opens the Paste from Other Apps pane. Changing it there and coming back updates the card within a second. On older macOS the card says it can't be checked.
 - [x] 8.5 `feat/welcome-login`: the launch-at-login page with the approval hint. **Manual**
   - Verified automatically: builds; the Login Items link identifier exists in the system's own Settings extensions. I did not toggle it, because that would add a login item to your Mac from a build folder.
-  - **Manual:** Welcome page 3 shows a white switch "Open cb21 at login", off by default. Turn it on: it should appear under System Settings > General > Login Items, and Settings > General > Launch at login shows it on too. An unsigned build may show "macOS needs you to allow cb21 once in Login Items" with an "Open Login Items" button; allowing it there makes the message disappear within a second. Turning the switch off removes it.
+  - **Manual:** Welcome page 3 shows a white switch "Open CB21 at login", off by default. Turn it on: it should appear under System Settings > General > Login Items, and Settings > General > Launch at login shows it on too. An unsigned build may show "macOS needs you to allow CB21 once in Login Items" with an "Open Login Items" button; allowing it there makes the message disappear within a second. Turning the switch off removes it.
 - [x] 8.6 `feat/welcome-shortcuts`: the shortcuts page with the three recorders, styled for the dark window. **Manual**
   - Verified automatically: builds and launches; the recorders are the same component and the same tested validation as Settings (`ShortcutRecorder` now has a dark style for the Welcome window).
-  - **Manual:** Welcome page 4 lists "Open history", "Open menu bar list" and "Pause / resume capture" as white outline buttons on black. Click one and press e.g. Ctrl-Opt-V: it shows ⌃⌥V and works from any app straight away. A refused shortcut (Cmd-Space, no modifier, one another app owns, or one equal to another cb21 shortcut) shows a short message in grey with a warning sign. "Reset" clears it. While recording, the Return and arrow keys must not move the Welcome pages. Whatever you set here also shows in Settings > Shortcuts.
+  - **Manual:** Welcome page 4 lists "Open history", "Open menu bar list" and "Pause / resume capture" as white outline buttons on black. Click one and press e.g. Ctrl-Opt-V: it shows ⌃⌥V and works from any app straight away. A refused shortcut (Cmd-Space, no modifier, one another app owns, or one equal to another CB21 shortcut) shows a short message in grey with a warning sign. "Reset" clears it. While recording, the Return and arrow keys must not move the Welcome pages. Whatever you set here also shows in Settings > Shortcuts.
 - [x] 8.7 `docs/readme-welcome`: README mentions the Welcome window.
 
 ## Hand-back note

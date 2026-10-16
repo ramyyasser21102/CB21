@@ -69,7 +69,7 @@ private func clip(_ kind: Representation.Kind, _ type: String, _ data: Data) -> 
 }
 
 @Test func missingFileHasNoPreview() async {
-    let url = URL(fileURLWithPath: "/tmp/cb21-no-such-\(UUID().uuidString)/Gone.png")
+    let url = URL(fileURLWithPath: "/tmp/CB21-no-such-\(UUID().uuidString)/Gone.png")
     #expect(await PreviewRenderer.render(clip(.file, "public.file-url", Data(url.absoluteString.utf8))) == nil)
 }
 

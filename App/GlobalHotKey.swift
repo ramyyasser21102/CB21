@@ -21,7 +21,7 @@ final class GlobalHotKeys {
         installHandlerIfNeeded()
         let id = nextID
         var ref: EventHotKeyRef?
-        let hotKeyID = EventHotKeyID(signature: OSType(0x6362_3231), id: id) // 'cb21'
+        let hotKeyID = EventHotKeyID(signature: OSType(0x6362_3231), id: id) // 'CB21'
         let status = RegisterEventHotKey(
             UInt32(shortcut.keyCode), Self.carbonModifiers(shortcut.modifiers), hotKeyID,
             GetApplicationEventTarget(), 0, &ref

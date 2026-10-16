@@ -14,7 +14,7 @@ if [ -f project.yml ]; then
   echo "==> xcodegen"
   xcodegen generate
   echo "==> xcodebuild"
-  xcodebuild -project cb21.xcodeproj -scheme cb21 -configuration Debug \
+  xcodebuild -project CB21.xcodeproj -scheme CB21 -configuration Debug \
     -destination 'platform=macOS' build | tail -n 20
 else
   echo "==> no project.yml yet, skipping xcodebuild"

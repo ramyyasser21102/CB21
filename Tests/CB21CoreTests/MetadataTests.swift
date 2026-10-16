@@ -122,7 +122,7 @@ private func tempDir() throws -> URL {
 }
 
 @Test func missingFileIsReportedAsGoneButKeepsItsName() {
-    let url = URL(fileURLWithPath: "/tmp/cb21-no-such-\(UUID().uuidString)/Gone.pdf")
+    let url = URL(fileURLWithPath: "/tmp/CB21-no-such-\(UUID().uuidString)/Gone.pdf")
     let meta = clip(.file, "public.file-url", Data(url.absoluteString.utf8)).metadata()
     guard case .file(let facts) = meta.detail else { Issue.record("not a file"); return }
     #expect(facts.name == "Gone.pdf")

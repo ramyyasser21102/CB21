@@ -5,8 +5,8 @@ public struct StoreError: Error, Equatable, CustomStringConvertible {
     public let message: String
     public var description: String { message }
 
-    /// The database was written by a newer cb21. It is healthy, so it must not be reset.
-    public static let newerDatabase = StoreError(message: "the database was created by a newer version of cb21")
+    /// The database was written by a newer CB21. It is healthy, so it must not be reset.
+    public static let newerDatabase = StoreError(message: "the database was created by a newer version of CB21")
 }
 
 private let sqliteTransient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)

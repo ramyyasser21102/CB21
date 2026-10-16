@@ -80,7 +80,7 @@ struct WelcomeView: View {
 
     private var primaryTitle: String {
         if flow.isFirstPage { return "Get started" }
-        return flow.isLastPage ? "Start using cb21" : "Continue"
+        return flow.isLastPage ? "Start using CB21" : "Continue"
     }
 
     /// The current page's dot stretches into a bar; pages already visited are brighter.

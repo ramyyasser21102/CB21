@@ -22,7 +22,7 @@ final class HistoryWindowController {
                 loadClip: { await service.clip(id: $0) }
             ))
             let window = NSWindow(contentViewController: hosting)
-            window.title = "cb21 History"
+            window.title = "CB21 History"
             window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
             window.level = .floating
             window.isReleasedWhenClosed = false

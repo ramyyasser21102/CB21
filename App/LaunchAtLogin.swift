@@ -1,6 +1,6 @@
 import ServiceManagement
 
-/// Launch at login through `SMAppService`. The system keeps the setting, so it is read, never saved by cb21.
+/// Launch at login through `SMAppService`. The system keeps the setting, so it is read, never saved by CB21.
 enum LaunchAtLogin {
     enum Status: Equatable {
         case off

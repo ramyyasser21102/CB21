@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/assets/cb21.png" alt="cb21 app icon" width="160">
+  <img src="docs/assets/CB21.png" alt="CB21 app icon" width="160">
 </p>
 
-# cb21
+# CB21
 
 A free, native clipboard history manager for macOS. It lives in the menu bar and remembers what you copy, so you can use anything again without copying it twice.
 
@@ -19,16 +19,16 @@ No account, no ads, no network access, no telemetry.
 - **Skips sensitive copies** that apps mark as concealed, such as password managers.
 - **You set the limits**: maximum number of clips (default 100) and maximum storage (default 100 MB). The least recently used clips go first.
 - **Launch at login**, off by default.
-- **A short Welcome** the first time you open cb21: it helps you allow clipboard access, choose whether to start at login, set your shortcuts, and explains what is kept. You can skip any step, and reopen it later from the menu ("Welcome…") or Settings.
+- **A short Welcome** the first time you open CB21: it helps you allow clipboard access, choose whether to start at login, set your shortcuts, and explains what is kept. You can skip any step, and reopen it later from the menu ("Welcome…") or Settings.
 
 ## Install
 
-1. Download `cb21-<version>.zip` from the [Releases](../../releases) page and unzip it.
-2. Drag `cb21.app` into your Applications folder.
-3. Open it. cb21 isn't notarized by Apple, because it is a free project without a paid developer account, so macOS blocks the first launch. Either:
-   - open **System Settings > Privacy & Security**, scroll down, and click **Open Anyway** next to cb21; or
-   - run `xattr -dr com.apple.quarantine /Applications/cb21.app` in Terminal and open it again.
-4. On macOS 15.4 and later, choose **Always Allow** when macOS asks to let cb21 read the clipboard. The Welcome window walks you through it, and you can change it later in **System Settings > Privacy & Security > Paste from Other Apps**. cb21 needs no other permissions: not Accessibility, not Input Monitoring, not Screen Recording.
+1. Download `CB21-<version>.zip` from the [Releases](../../releases) page and unzip it.
+2. Drag `CB21.app` into your Applications folder.
+3. Open it. CB21 isn't notarized by Apple, because it is a free project without a paid developer account, so macOS blocks the first launch. Either:
+   - open **System Settings > Privacy & Security**, scroll down, and click **Open Anyway** next to CB21; or
+   - run `xattr -dr com.apple.quarantine /Applications/CB21.app` in Terminal and open it again.
+4. On macOS 15.4 and later, choose **Always Allow** when macOS asks to let CB21 read the clipboard. The Welcome window walks you through it, and you can change it later in **System Settings > Privacy & Security > Paste from Other Apps**. CB21 needs no other permissions: not Accessibility, not Input Monitoring, not Screen Recording.
 
 Requires macOS 14 (Sonoma) or later.
 
@@ -38,20 +38,20 @@ You need Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew inst
 
 ```sh
 scripts/check.sh           # runs the tests and builds the app
-scripts/build-release.sh   # builds dist/cb21-<version>.zip
+scripts/build-release.sh   # builds dist/CB21-<version>.zip
 ```
 
 The app logic lives in the `CB21Core` Swift package (no UI, covered by tests). The `App/` folder holds the menu bar, History window and Settings. The Xcode project is generated from `project.yml` and isn't committed.
 
 ## Privacy
 
-cb21 makes no network connections. For each new clip it also remembers the name of the app that was in front when you copied (the "source app"), stored only on your Mac with the rest of your History. History is stored on your Mac in `~/Library/Application Support/cb21/` and **is not encrypted**, so anyone with access to your account can read it. Deleting a clip, or using Clear all, removes it from the database (with SQLite `secure_delete` on) and deletes its image files.
+CB21 makes no network connections. For each new clip it also remembers the name of the app that was in front when you copied (the "source app"), stored only on your Mac with the rest of your History. History is stored on your Mac in `~/Library/Application Support/cb21/` and **is not encrypted**, so anyone with access to your account can read it. Deleting a clip, or using Clear all, removes it from the database (with SQLite `secure_delete` on) and deletes its image files.
 
-cb21 skips copies that apps mark as concealed or transient. Use Pause for anything else you don't want kept.
+CB21 skips copies that apps mark as concealed or transient. Use Pause for anything else you don't want kept.
 
 ## License
 
-cb21 is free software, released under the [GNU General Public License v3.0](LICENSE). You can use it, study it, change it and share it. If you share a modified version, it must stay open source under the same license.
+CB21 is free software, released under the [GNU General Public License v3.0](LICENSE). You can use it, study it, change it and share it. If you share a modified version, it must stay open source under the same license.
 
 Copyright (C) 2026 Ramy Yasser
 
@@ -59,7 +59,7 @@ This program is free software: you can redistribute it and/or modify it under th
 
 ## Project notes
 
-- [`user-stories.md`](user-stories.md): what cb21 does and what is left out of v1.
+- [`user-stories.md`](user-stories.md): what CB21 does and what is left out of v1.
 - [`CONTEXT.md`](CONTEXT.md): the terms used in the code and docs.
 - [`docs/adr/`](docs/adr): architecture decisions.
 - [`docs/plan.md`](docs/plan.md): the development plan and status.
