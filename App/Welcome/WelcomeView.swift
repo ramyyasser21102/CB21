@@ -7,6 +7,8 @@ struct WelcomeView: View {
     let finish: () -> Void
 
     @State private var flow = WelcomeFlow()
+    /// False until the first layout has settled; see `WelcomeReadyKey`.
+    @State private var ready = false
     /// The edge new pages slide in from. Set before each move so the transition knows which way to go.
     @State private var entering: Edge = .trailing
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -26,8 +28,18 @@ struct WelcomeView: View {
             }
             skipButton
         }
-        .frame(width: 560, height: 640)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black)
         .preferredColorScheme(.dark)
+        .environment(\.welcomeReady, ready)
+        // No implicit animation in the first moments, whatever else is happening as the window appears.
+        .transaction { transaction in
+            if !ready { transaction.animation = nil }
+        }
+        .task {
+            try? await Task.sleep(for: .milliseconds(180))
+            ready = true
+        }
         .onChange(of: flow.isFinished) { _, done in
             if done { finish() }
         }

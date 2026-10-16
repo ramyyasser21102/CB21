@@ -5,6 +5,7 @@ import CB21Core
 /// The app image. It fades in while growing slightly to full size; with Reduce Motion it only fades.
 struct WelcomeLogo: View {
     @State private var settled = false
+    @Environment(\.welcomeReady) private var ready
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -15,9 +16,13 @@ struct WelcomeLogo: View {
             .scaleEffect(reduceMotion || settled ? 1 : 0.92)
             .opacity(settled ? 1 : 0)
             .accessibilityHidden(true)
-            .onAppear {
-                withAnimation(.easeOut(duration: reduceMotion ? 0.25 : 1.4)) { settled = true }
-            }
+            .onAppear { if ready { settle() } }
+            .onChange(of: ready) { _, nowReady in if nowReady { settle() } }
+    }
+
+    private func settle() {
+        guard !settled else { return }
+        withAnimation(.easeOut(duration: reduceMotion ? 0.25 : 1.4)) { settled = true }
     }
 }
 
