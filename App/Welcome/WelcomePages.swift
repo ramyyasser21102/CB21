@@ -199,12 +199,29 @@ struct WelcomeLoginPage: View {
 }
 
 struct WelcomeShortcutsPage: View {
+    let service: CaptureService
+
     var body: some View {
+        let values = service.settings.values
         WelcomePageLayout(
             title: "Shortcuts",
-            message: "Open your history, or the menu bar list, from any app. Both are optional.",
+            message: "Open your history, or the menu bar list, from any app. All three are optional.",
             icon: { symbol("keyboard") },
-            extra: { EmptyView() }
+            extra: {
+                VStack(spacing: 14) {
+                    ShortcutRecorder(title: "Open history", dark: true, shortcut: values.historyShortcut,
+                                     onChange: { service.setHistoryShortcut($0) })
+                    Divider().overlay(WelcomeStyle.faint)
+                    ShortcutRecorder(title: "Open menu bar list", dark: true, shortcut: values.menuShortcut,
+                                     onChange: { service.setMenuShortcut($0) })
+                    Divider().overlay(WelcomeStyle.faint)
+                    ShortcutRecorder(title: "Pause / resume capture", dark: true, shortcut: values.pauseShortcut,
+                                     onChange: { service.setPauseShortcut($0) })
+                }
+                .padding(16)
+                .frame(maxWidth: 420)
+                .background(RoundedRectangle(cornerRadius: 12).stroke(WelcomeStyle.faint, lineWidth: 1))
+            }
         )
     }
 }

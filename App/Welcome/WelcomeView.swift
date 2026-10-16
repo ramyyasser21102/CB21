@@ -39,7 +39,7 @@ struct WelcomeView: View {
         case .welcome: WelcomeIntroPage()
         case .clipboard: WelcomeClipboardPage(service: service)
         case .login: WelcomeLoginPage()
-        case .shortcuts: WelcomeShortcutsPage()
+        case .shortcuts: WelcomeShortcutsPage(service: service)
         case .privacy: WelcomePrivacyPage()
         }
     }
