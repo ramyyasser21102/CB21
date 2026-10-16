@@ -10,6 +10,9 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     private var openGate = MenuOpenGate()
     private let searchView = MenuSearchView()
     private var searchQuery = ""
+    private var rowViews: [ObjectIdentifier: ClipMenuRowView] = [:]
+    /// What to do once the menu has closed, after a click on a row.
+    private var pendingAfterClose: (() -> Void)?
     /// The items between the search row and the actions are tagged so they can be swapped while the menu is open.
     private static let clipItemTag = 7001
     private static let searchResultLimit = 20
@@ -58,6 +61,17 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         openGate.menuDidClose()
         searchQuery = ""
         searchView.clear()
+        if let pending = pendingAfterClose {
+            pendingAfterClose = nil
+            pending()
+        }
+    }
+
+    /// A custom row view has to draw the highlight itself, so tell each row whether it is the highlighted one.
+    func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
+        for (id, view) in rowViews {
+            view.isHighlighted = item.map { ObjectIdentifier($0) == id } ?? false
+        }
     }
 
     // MARK: Search
@@ -65,6 +79,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     /// Swaps the clip rows for the ones matching the query. Everything here is synchronous: a menu that is open
     /// doesn't run queued work, so nothing may wait on the database.
     private func rebuildClipItems() {
+        rowViews.removeAll()
         guard let firstSlot = menu.items.firstIndex(where: { $0.tag == Self.clipItemTag }) else { return }
         for item in menu.items.reversed() where item.tag == Self.clipItemTag {
             menu.removeItem(item)
@@ -87,9 +102,9 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         return entries(for: Array(matches.prefix(Self.searchResultLimit)))
     }
 
-    /// One menu row per Clip, with its ⌥ alternate for pinning. Pinned rows come first (the list is already in
-    /// that order) and a divider separates them from the rest. The first nine rows answer to ⌘1 to ⌘9, and ⌥⌘1
-    /// to ⌥⌘9 pin or unpin them; the numbers follow what is listed, so they restart when a search narrows it.
+    /// One menu row per Clip, drawn by `ClipMenuRowView` with its own star. Pinned rows come first (the list is already
+    /// in that order) and a divider separates them from the rest. The first nine rows answer to ⌘1 to ⌘9; the numbers
+    /// follow what is listed, so they restart when a search narrows it.
     private func entries(for rows: [HistoryModel.Row]) -> [NSMenuItem] {
         let mostRecent = service.model.mostRecentID
         var result: [NSMenuItem] = []
@@ -98,33 +113,41 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             if let previousPinned, previousPinned != row.isPinned { result.append(.separator()) }
             previousPinned = row.isPinned
             let primary = clipItem(row)
-            markState(primary, pinned: row.isPinned, mostRecent: row.id == mostRecent)
-            let alternate = pinToggleItem(for: row, title: primary.title)
-            if let key = QuickSelect.key(forRow: index) {
+            let key = QuickSelect.key(forRow: index)
+            if let key {
                 primary.keyEquivalent = key
                 primary.keyEquivalentModifierMask = [.command]
-                alternate.keyEquivalent = key
-                alternate.keyEquivalentModifierMask = [.command, .option]
             }
+            let (title, symbol) = Self.titleAndSymbol(for: row)
+            let view = ClipMenuRowView(.init(
+                title: title, symbol: symbol, thumbnail: row.thumbnail, number: key,
+                isMostRecent: row.id == mostRecent, isPinned: row.isPinned
+            ))
+            view.onPick = { [weak self] optionHeld in
+                // Closing the menu first: this runs inside the menu's own event loop, and the action must not.
+                self?.pendingAfterClose = { [service = self?.service] in
+                    switch MenuClick.intent(optionHeld: optionHeld, isPinned: view.isPinned) {
+                    case .copy: service?.recopy(id: row.id)
+                    case .pin: service?.setPinned(row.id, true)
+                    case .unpin: service?.setPinned(row.id, false)
+                    }
+                }
+                self?.menu.cancelTracking()
+            }
+            view.onTogglePin = { [weak self] pinned in
+                self?.service.setPinned(row.id, pinned)
+            }
+            primary.view = view
+            rowViews[ObjectIdentifier(primary)] = view
             result.append(primary)
-            result.append(alternate)
         }
         return result
     }
 
-    /// Hold ⌥ and the row turns into this.
-    private func pinToggleItem(for row: HistoryModel.Row, title: String) -> NSMenuItem {
-        let shown = title.count > 40 ? String(title.prefix(39)) + "…" : title
-        let alternate = item("\(row.isPinned ? "Unpin" : "Pin") “\(shown)”") { [service] in
-            service.setPinned(row.id, !row.isPinned)
-        }
-        alternate.isAlternate = true
-        alternate.keyEquivalentModifierMask = [.option]
-        return alternate
-    }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        rowViews.removeAll()
         let model = service.model
         searchQuery = ""
         searchView.clear()
@@ -152,9 +175,6 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             entry.tag = Self.clipItemTag
             menu.addItem(entry)
         }
-        if !model.rows.isEmpty {
-            menu.addItem(note("Hold ⌥ and click a clip to pin or unpin it"))
-        }
         menu.addItem(.separator())
 
         menu.addItem(item("Open history…") { [service] in HistoryWindowController.shared.show(service: service) })
@@ -180,64 +200,25 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     // MARK: Items
 
     private func clipItem(_ row: HistoryModel.Row) -> NSMenuItem {
-        let title: String
-        let symbol: String?
-        switch row.preview {
-        case .text(let text): title = text; symbol = nil
-        case .link(let url): title = url; symbol = "link"
-        case .file(let name): title = name; symbol = "doc"
-        case .image: title = "Image"; symbol = "photo"
-        case .pdf: title = "PDF"; symbol = "doc.richtext"
-        }
-        let entry = item(title) { [service] in
+        let (title, _) = Self.titleAndSymbol(for: row)
+        // The action covers Return on a highlighted row and ⌘1 to ⌘9; clicks are handled by the row view.
+        return item(title) { [service] in
             switch MenuClick.intent(optionHeld: NSEvent.modifierFlags.contains(.option), isPinned: row.isPinned) {
             case .copy: service.recopy(id: row.id)
             case .pin: service.setPinned(row.id, true)
             case .unpin: service.setPinned(row.id, false)
             }
         }
-        if let thumbnail = row.thumbnail {
-            entry.image = thumbnail
-        } else if let symbol {
-            entry.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
-        }
-        entry.setAccessibilityLabel(row.isPinned ? "Pinned. \(title)" : title)
-        return entry
     }
 
-    /// The state column is what this menu reliably draws (row images are not drawn on recent macOS versions), so it
-    /// carries both marks: a star for a Pinned clip, a dot for the most recently used one, and both together.
-    private func markState(_ entry: NSMenuItem, pinned: Bool, mostRecent: Bool) {
-        guard pinned || mostRecent else { return }
-        entry.state = .on
-        entry.onStateImage = Self.stateImage(pinned: pinned, mostRecent: mostRecent)
-        entry.toolTip = [pinned ? "Pinned" : nil, mostRecent ? "Most recent clip" : nil].compactMap { $0 }.joined(separator: ", ")
-        let spoken = [pinned ? "Pinned" : nil, mostRecent ? "Most recent" : nil].compactMap { $0 }.joined(separator: ", ")
-        entry.setAccessibilityLabel("\(spoken). \(entry.title)")
-    }
-
-    private static func stateImage(pinned: Bool, mostRecent: Bool) -> NSImage {
-        let size = NSSize(width: 14, height: 14)
-        let image = NSImage(size: size, flipped: false) { rect in
-            func symbol(_ name: String, points: CGFloat) -> NSImage? {
-                NSImage(systemSymbolName: name, accessibilityDescription: nil)?
-                    .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: points, weight: .semibold))
-            }
-            if pinned {
-                let star = symbol("star.fill", points: 11)
-                star?.draw(in: NSRect(x: 0, y: 1, width: 12, height: 12))
-                if mostRecent {
-                    // A small dot in the corner of the star, for a clip that is both.
-                    symbol("circle.fill", points: 5)?.draw(in: NSRect(x: rect.width - 6, y: 0, width: 6, height: 6))
-                }
-            } else {
-                symbol("circle.fill", points: 8)?.draw(in: NSRect(x: 2, y: 2, width: 10, height: 10))
-            }
-            return true
+    private static func titleAndSymbol(for row: HistoryModel.Row) -> (String, String?) {
+        switch row.preview {
+        case .text(let text): (text, nil)
+        case .link(let url): (url, "link")
+        case .file(let name): (name, "doc")
+        case .image: ("Image", nil)
+        case .pdf: ("PDF", "doc.richtext")
         }
-        // A template image is tinted by the menu, so it is visible on light and dark menus alike.
-        image.isTemplate = true
-        return image
     }
 
     private func note(_ text: String) -> NSMenuItem {
