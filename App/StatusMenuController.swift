@@ -80,15 +80,28 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         let query = searchQuery.trimmingCharacters(in: .whitespaces)
         if query.isEmpty {
             if model.menuRows.isEmpty { return [note("No clips yet")] }
-            return model.menuRows.enumerated().map { index, row in
+            let entries = model.menuRows.enumerated().map { index, row -> NSMenuItem in
                 let entry = clipItem(row)
                 if index == 0 { markAsMostRecent(entry) }
                 return entry
             }
+            return numbered(entries)
         }
         let matches = model.rows.filter { ClipSearch.matches(query, in: $0.searchText) }
         if matches.isEmpty { return [note("No matches")] }
-        return matches.prefix(Self.searchResultLimit).map { clipItem($0) }
+        return numbered(matches.prefix(Self.searchResultLimit).map { clipItem($0) })
+    }
+
+    /// The first nine rows answer to ⌘1 to ⌘9, which show beside them. The numbers follow what is listed, so
+    /// they restart whenever a search narrows the list.
+    private func numbered(_ entries: [NSMenuItem]) -> [NSMenuItem] {
+        for (index, entry) in entries.enumerated() {
+            if let key = QuickSelect.key(forRow: index) {
+                entry.keyEquivalent = key
+                entry.keyEquivalentModifierMask = [.command]
+            }
+        }
+        return entries
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
