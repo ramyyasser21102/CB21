@@ -336,7 +336,7 @@ public actor ClipStore {
     public func list() throws -> [Clip] {
         let db = try handle()
         var rows: [(id: UUID, created: Date, used: Date, source: String?, pinned: Date?)] = []
-        try query(db, "SELECT id, created_at, last_used_at, source_app_name, pinned_at FROM clips ORDER BY pinned_at IS NULL, pinned_at DESC, last_used_at DESC, created_at DESC") { stmt in
+        try query(db, "SELECT id, created_at, last_used_at, source_app_name, pinned_at FROM clips ORDER BY pinned_at IS NULL, last_used_at DESC, created_at DESC") { stmt in
             let id = UUID(uuidString: String(cString: sqlite3_column_text(stmt, 0)))!
             rows.append((
                 id,

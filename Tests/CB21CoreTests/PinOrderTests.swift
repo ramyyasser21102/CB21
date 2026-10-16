@@ -10,7 +10,7 @@ private struct Item: Equatable {
 }
 
 private func sorted(_ items: [Item]) -> [String] {
-    PinOrder.sorted(items, isPinned: \.isPinned, pinnedAt: \.pinnedAt, lastUsedAt: \.lastUsedAt).map(\.name)
+    PinOrder.sorted(items, isPinned: \.isPinned, lastUsedAt: \.lastUsedAt).map(\.name)
 }
 
 private func at(_ seconds: TimeInterval) -> Date { Date(timeIntervalSince1970: seconds) }
@@ -20,14 +20,26 @@ private func at(_ seconds: TimeInterval) -> Date { Date(timeIntervalSince1970: s
     #expect(sorted(items) == ["new", "mid", "old"])
 }
 
-@Test func pinnedItemsComeFirstNewestPinFirst() {
+@Test func pinnedItemsComeFirstAndAreOrderedByLastUseLikeTheRest() {
     let items = [
         Item(name: "recent", pinnedAt: nil, lastUsedAt: at(100)),
-        Item(name: "pinnedEarly", pinnedAt: at(10), lastUsedAt: at(1)),
-        Item(name: "pinnedLate", pinnedAt: at(20), lastUsedAt: at(2)),
+        Item(name: "pinnedOldUse", pinnedAt: at(20), lastUsedAt: at(1)),
+        Item(name: "pinnedNewUse", pinnedAt: at(10), lastUsedAt: at(2)),
         Item(name: "older", pinnedAt: nil, lastUsedAt: at(50)),
     ]
-    #expect(sorted(items) == ["pinnedLate", "pinnedEarly", "recent", "older"])
+    // The pin dates (20 and 10) play no part: what counts is when each was last used.
+    #expect(sorted(items) == ["pinnedNewUse", "pinnedOldUse", "recent", "older"])
+}
+
+@Test func aNewlyPinnedOlderClipGoesBelowTheMostRecentlyUsedPinnedClip() {
+    // The most recently used clip is pinned and sits first. Pinning another, older clip must not push it down.
+    var items = [
+        Item(name: "mostRecentPinned", pinnedAt: at(5), lastUsedAt: at(100)),
+        Item(name: "other", pinnedAt: nil, lastUsedAt: at(40)),
+        Item(name: "older", pinnedAt: nil, lastUsedAt: at(10)),
+    ]
+    items[2].pinnedAt = at(999) // pinned just now
+    #expect(sorted(items) == ["mostRecentPinned", "older", "other"])
 }
 
 @Test func pinningAnItemMovesItIntoTheTopGroupRightAway() {
@@ -47,7 +59,7 @@ private func at(_ seconds: TimeInterval) -> Date { Date(timeIntervalSince1970: s
     let same = at(7)
     let items = [Item(name: "x", pinnedAt: nil, lastUsedAt: same), Item(name: "y", pinnedAt: nil, lastUsedAt: same), Item(name: "z", pinnedAt: nil, lastUsedAt: same)]
     #expect(sorted(items) == ["x", "y", "z"])
-    let pinned = [Item(name: "x", pinnedAt: same, lastUsedAt: at(1)), Item(name: "y", pinnedAt: same, lastUsedAt: at(2))]
+    let pinned = [Item(name: "x", pinnedAt: at(1), lastUsedAt: same), Item(name: "y", pinnedAt: at(2), lastUsedAt: same)]
     #expect(sorted(pinned) == ["x", "y"])
 }
 
@@ -66,6 +78,6 @@ private func at(_ seconds: TimeInterval) -> Date { Date(timeIntervalSince1970: s
     try await store.pin(id: a.id, at: at(100))
     try await store.pin(id: c.id, at: at(200))
     let fromStore = try await store.list()
-    let reshuffled = PinOrder.sorted(fromStore.reversed(), isPinned: \.isPinned, pinnedAt: \.pinnedAt, lastUsedAt: \.lastUsedAt)
+    let reshuffled = PinOrder.sorted(fromStore.reversed(), isPinned: \.isPinned, lastUsedAt: \.lastUsedAt)
     #expect(reshuffled.map(\.id) == fromStore.map(\.id))
 }

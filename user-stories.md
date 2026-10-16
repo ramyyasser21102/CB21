@@ -132,7 +132,7 @@ As a user, I want to press ⌘ and a number to pick a clip, so I can copy a rece
 
 As a user, I want to pin clips I use often, so they stay on top and never get deleted to make room.
 
-- A Pinned clip appears first, in its own section with a divider, newest pin first, in the menu and in the History window. A filled star marks it.
+- Pinned clips appear first, in their own section with a divider, in the menu and in the History window. Inside the group they are ordered by last use, like the rest of the list, so the clip used most recently is always on top and pinning an older clip puts it below the more recently used pinned ones. A filled star marks a pinned clip.
 - In the menu bar menu each row has its own star at the right: a faint outline when the clip isn't pinned, a filled yellow star when it is. Clicking the star pins or unpins it right there, and the list reorders at once while the menu is still open: a pinned clip jumps into the pinned group, an unpinned one drops back into the list, and the divider and the ⌘ numbers follow. Clicking anywhere else on the row copies the clip, and ⌥-click on a row also pins or unpins it. In the History window each row has the same star button, and the right-click menu has Pin and Unpin.
 - The menu shows all pinned clips, then the 10 most recent others. ⌘1 to ⌘9 number the first nine rows overall.
 - Limits never delete a Pinned clip. Pinned clips still count toward the totals, so other clips go first. If pinned clips alone fill the limits, the other clips go too, except the newest one, which always stays so a fresh copy never vanishes the moment it is captured.
