@@ -23,7 +23,7 @@ targets:
         LSMinimumSystemVersion: "14.0"
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
-        NSHumanReadableCopyright: "Free to use. No data leaves your Mac."
+        NSHumanReadableCopyright: "Copyright © 2026 Ramy Yasser. Free software under the GNU GPL v3."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ramyyasser.cb21

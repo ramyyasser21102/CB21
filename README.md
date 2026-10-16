@@ -49,6 +49,14 @@ cb21 makes no network connections. For each new clip it also remembers the name 
 
 cb21 skips copies that apps mark as concealed or transient. Use Pause for anything else you don't want kept.
 
+## License
+
+cb21 is free software, released under the [GNU General Public License v3.0](LICENSE). You can use it, study it, change it and share it. If you share a modified version, it must stay open source under the same license.
+
+Copyright (C) 2026 Ramy Yasser
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY, without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
 ## Project notes
 
 - [`user-stories.md`](user-stories.md): what cb21 does and what is left out of v1.
