@@ -159,6 +159,8 @@ Each step is one branch. **Manual** marks what only the user can verify.
   - Not tested by me: light mode, and a very narrow or very large text size setting.
   - **Manual:** copy something very long and open the menu: the menu keeps the same width, the search field spans it, and the stars line up in a column at the right edge.
 
+- [x] S22 `chore/version-1.2.1`: v1.2.0 is published, so further builds must not reuse that number (a rebuilt zip with the same name and version but different content as the public one would be confusing). The version is now 1.2.1 (build 4). The published v1.2.0 zip is never replaced; changes since it (the menu width fix and anything after) ship as 1.2.1.
+
 ## Phase 6 — Release
 
 - [x] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**
