@@ -13,6 +13,8 @@ final class HistoryModel {
         let createdAt: Date
         let byteCount: Int
         let sourceAppName: String?
+        /// Normalized text Search matches against, kept in memory so the menu can filter instantly.
+        let searchText: String
     }
 
     static let menuLimit = 10
@@ -57,6 +59,7 @@ final class HistoryModel {
 
     func refresh(from store: ClipStore) async {
         guard let clips = try? await store.list() else { return }
+        let index = (try? await store.searchIndex()) ?? [:]
         let live = Set(clips.map(\.id))
         thumbnails = thumbnails.filter { live.contains($0.key) }
         rows = clips.map { clip in
@@ -65,7 +68,8 @@ final class HistoryModel {
             }
             return Row(
                 id: clip.id, preview: clip.preview, thumbnail: thumbnails[clip.id],
-                createdAt: clip.createdAt, byteCount: clip.byteCount, sourceAppName: clip.sourceAppName
+                createdAt: clip.createdAt, byteCount: clip.byteCount, sourceAppName: clip.sourceAppName,
+                searchText: index[clip.id] ?? ""
             )
         }
     }

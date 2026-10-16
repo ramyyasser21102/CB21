@@ -8,11 +8,20 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private var openGate = MenuOpenGate()
+    private let searchView = MenuSearchView()
+    private var searchQuery = ""
+    /// The items between the search row and the actions are tagged so they can be swapped while the menu is open.
+    private static let clipItemTag = 7001
+    private static let searchResultLimit = 20
 
     init(service: CaptureService) {
         self.service = service
         super.init()
         menu.delegate = self
+        searchView.onChange = { [weak self] query in
+            self?.searchQuery = query
+            self?.rebuildClipItems()
+        }
         statusItem.menu = menu
         statusItem.button?.image = Self.icon(paused: false)
         statusItem.button?.setAccessibilityLabel("CB21 clipboard history")
@@ -47,11 +56,50 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
 
     func menuDidClose(_ menu: NSMenu) {
         openGate.menuDidClose()
+        searchQuery = ""
+        searchView.clear()
+    }
+
+    // MARK: Search
+
+    /// Swaps the clip rows for the ones matching the query. Everything here is synchronous: a menu that is open
+    /// doesn't run queued work, so nothing may wait on the database.
+    private func rebuildClipItems() {
+        guard let firstSlot = menu.items.firstIndex(where: { $0.tag == Self.clipItemTag }) else { return }
+        for item in menu.items.reversed() where item.tag == Self.clipItemTag {
+            menu.removeItem(item)
+        }
+        for (offset, entry) in clipEntries().enumerated() {
+            entry.tag = Self.clipItemTag
+            menu.insertItem(entry, at: firstSlot + offset)
+        }
+    }
+
+    private func clipEntries() -> [NSMenuItem] {
+        let model = service.model
+        let query = searchQuery.trimmingCharacters(in: .whitespaces)
+        if query.isEmpty {
+            if model.menuRows.isEmpty { return [note("No clips yet")] }
+            return model.menuRows.enumerated().map { index, row in
+                let entry = clipItem(row)
+                if index == 0 { markAsMostRecent(entry) }
+                return entry
+            }
+        }
+        let matches = model.rows.filter { ClipSearch.matches(query, in: $0.searchText) }
+        if matches.isEmpty { return [note("No matches")] }
+        return matches.prefix(Self.searchResultLimit).map { clipItem($0) }
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         let model = service.model
+        searchQuery = ""
+        searchView.clear()
+        let searchItem = NSMenuItem()
+        searchItem.view = searchView
+        menu.addItem(searchItem)
+        menu.addItem(.separator())
 
         if model.pasteboardAccessDenied {
             menu.addItem(note("CB21 can't read the clipboard"))
@@ -68,14 +116,9 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             menu.addItem(.separator())
         }
 
-        if model.menuRows.isEmpty {
-            menu.addItem(note("No clips yet"))
-        } else {
-            for (index, row) in model.menuRows.enumerated() {
-                let entry = clipItem(row)
-                if index == 0 { markAsMostRecent(entry) }
-                menu.addItem(entry)
-            }
+        for entry in clipEntries() {
+            entry.tag = Self.clipItemTag
+            menu.addItem(entry)
         }
         menu.addItem(.separator())
 
