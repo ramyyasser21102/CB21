@@ -172,20 +172,52 @@ final class CaptureService {
         }
     }
 
-    /// Asks for confirmation, then permanently deletes the whole History.
+    /// Deletes Clips, first asking if any of them is pinned. Returns false when the user cancelled.
+    func confirmAndDelete(ids: Set<UUID>) -> Bool {
+        let pinned = model.rows.filter { ids.contains($0.id) && $0.isPinned }.count
+        if pinned > 0 {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = pinned == 1 ? "Delete this pinned clip?" : "Delete \(pinned) pinned clips?"
+            alert.informativeText = "Pinned clips are kept when other clips are cleared or trimmed. Deleting one can't be undone."
+            alert.addButton(withTitle: "Delete")
+            alert.addButton(withTitle: "Cancel")
+            alert.buttons.first?.hasDestructiveAction = true
+            NSApp.activate(ignoringOtherApps: true)
+            guard alert.runModal() == .alertFirstButtonReturn else { return false }
+        }
+        delete(ids: ids)
+        return true
+    }
+
+    /// Asks for confirmation, then permanently deletes the History. Pinned clips are kept unless the user ticks the box.
     func confirmAndClearAll() {
         guard let store, !model.rows.isEmpty else { return }
+        let pinned = model.rows.filter(\.isPinned).count
+        let others = model.rows.count - pinned
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = "Clear all history?"
-        alert.informativeText = "This permanently deletes \(model.rows.count) clips from this Mac. It can't be undone."
+        if pinned == 0 {
+            alert.informativeText = "This permanently deletes \(others) clips from this Mac. It can't be undone."
+        } else {
+            alert.informativeText = "This permanently deletes \(others) clips from this Mac. \(pinned) pinned \(pinned == 1 ? "clip is" : "clips are") kept unless you tick the box. It can't be undone."
+        }
+        var alsoPinned: NSButton?
+        if pinned > 0 {
+            let box = NSButton(checkboxWithTitle: "Also delete pinned clips", target: nil, action: nil)
+            box.state = .off
+            alert.accessoryView = box
+            alsoPinned = box
+        }
         alert.addButton(withTitle: "Clear All")
         alert.addButton(withTitle: "Cancel")
         alert.buttons.first?.hasDestructiveAction = true
         NSApp.activate(ignoringOtherApps: true)
         guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let keepPinned = alsoPinned?.state != .on
         Task {
-            try? await store.deleteAll()
+            try? await store.deleteAll(keepingPinned: keepPinned)
             await model.refresh(from: store)
         }
     }
