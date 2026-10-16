@@ -147,6 +147,15 @@ final class CaptureService {
         return true
     }
 
+    /// Pins or unpins a Clip. Pinned Clips stay on top and are never deleted to make room.
+    func setPinned(_ id: UUID, _ pinned: Bool) {
+        guard let store else { return }
+        Task {
+            if pinned { try? await store.pin(id: id) } else { try? await store.unpin(id: id) }
+            await model.refresh(from: store)
+        }
+    }
+
     /// The full Clip, for the Detail pane.
     func clip(id: UUID) async -> Clip? {
         guard let store else { return nil }

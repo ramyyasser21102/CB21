@@ -80,28 +80,48 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         let query = searchQuery.trimmingCharacters(in: .whitespaces)
         if query.isEmpty {
             if model.menuRows.isEmpty { return [note("No clips yet")] }
-            let entries = model.menuRows.enumerated().map { index, row -> NSMenuItem in
-                let entry = clipItem(row)
-                if index == 0 { markAsMostRecent(entry) }
-                return entry
-            }
-            return numbered(entries)
+            return entries(for: model.menuRows)
         }
         let matches = model.rows.filter { ClipSearch.matches(query, in: $0.searchText) }
         if matches.isEmpty { return [note("No matches")] }
-        return numbered(matches.prefix(Self.searchResultLimit).map { clipItem($0) })
+        return entries(for: Array(matches.prefix(Self.searchResultLimit)))
     }
 
-    /// The first nine rows answer to ⌘1 to ⌘9, which show beside them. The numbers follow what is listed, so
-    /// they restart whenever a search narrows the list.
-    private func numbered(_ entries: [NSMenuItem]) -> [NSMenuItem] {
-        for (index, entry) in entries.enumerated() {
+    /// One menu row per Clip, with its ⌥ alternate for pinning. Pinned rows come first (the list is already in
+    /// that order) and a divider separates them from the rest. The first nine rows answer to ⌘1 to ⌘9, and ⌥⌘1
+    /// to ⌥⌘9 pin or unpin them; the numbers follow what is listed, so they restart when a search narrows it.
+    private func entries(for rows: [HistoryModel.Row]) -> [NSMenuItem] {
+        let mostRecent = service.model.mostRecentID
+        var result: [NSMenuItem] = []
+        var previousPinned: Bool?
+        for (index, row) in rows.enumerated() {
+            if let previousPinned, previousPinned != row.isPinned { result.append(.separator()) }
+            previousPinned = row.isPinned
+            let primary = clipItem(row)
+            if row.id == mostRecent { markAsMostRecent(primary) }
+            let alternate = pinToggleItem(for: row, title: primary.title)
             if let key = QuickSelect.key(forRow: index) {
-                entry.keyEquivalent = key
-                entry.keyEquivalentModifierMask = [.command]
+                primary.keyEquivalent = key
+                primary.keyEquivalentModifierMask = [.command]
+                alternate.keyEquivalent = key
+                alternate.keyEquivalentModifierMask = [.command, .option]
             }
+            result.append(primary)
+            result.append(alternate)
         }
-        return entries
+        return result
+    }
+
+    /// Hold ⌥ and the row turns into this.
+    private func pinToggleItem(for row: HistoryModel.Row, title: String) -> NSMenuItem {
+        let shown = title.count > 40 ? String(title.prefix(39)) + "…" : title
+        let alternate = item("\(row.isPinned ? "Unpin" : "Pin") “\(shown)”") { [service] in
+            service.setPinned(row.id, !row.isPinned)
+        }
+        alternate.isAlternate = true
+        alternate.keyEquivalentModifierMask = [.option]
+        alternate.image = NSImage(systemSymbolName: row.isPinned ? "star.slash" : "star", accessibilityDescription: nil)
+        return alternate
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
@@ -132,6 +152,9 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         for entry in clipEntries() {
             entry.tag = Self.clipItemTag
             menu.addItem(entry)
+        }
+        if !model.rows.isEmpty {
+            menu.addItem(note("Hold ⌥ to pin or unpin a clip"))
         }
         menu.addItem(.separator())
 
@@ -173,6 +196,8 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         } else if let symbol {
             entry.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         }
+        if row.isPinned { entry.image = Self.starred(entry.image) }
+        entry.setAccessibilityLabel(row.isPinned ? "Pinned. \(title)" : title)
         return entry
     }
 
@@ -184,6 +209,23 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         entry.onStateImage = dot
         entry.state = .on
         entry.toolTip = "Most recent clip"
+    }
+
+    /// The row's own icon with a small star in the corner. A text row has no icon, so it just gets the star.
+    private static func starred(_ base: NSImage?) -> NSImage {
+        let star = NSImage(systemSymbolName: "star.fill", accessibilityDescription: "Pinned")
+        guard let base else { return star ?? NSImage() }
+        let size = NSSize(width: 22, height: 18)
+        let result = NSImage(size: size, flipped: false) { rect in
+            let iconSize = NSSize(width: min(base.size.width, 16), height: min(base.size.height, 16))
+            base.draw(in: NSRect(x: 0, y: (rect.height - iconSize.height) / 2, width: iconSize.width, height: iconSize.height))
+            if let star {
+                let config = NSImage.SymbolConfiguration(pointSize: 8, weight: .bold)
+                star.withSymbolConfiguration(config)?.draw(in: NSRect(x: rect.width - 10, y: rect.height - 10, width: 10, height: 10))
+            }
+            return true
+        }
+        return result
     }
 
     private func note(_ text: String) -> NSMenuItem {
