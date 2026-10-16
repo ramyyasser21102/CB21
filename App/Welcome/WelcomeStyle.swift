@@ -43,21 +43,39 @@ struct WelcomeQuietButtonStyle: ButtonStyle {
     }
 }
 
+/// False for the first moments after the Welcome window opens. Entrance animations wait for it, so they never
+/// start while SwiftUI is still doing its first layout (which can make views fly in from the top-left corner).
+private struct WelcomeReadyKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    var welcomeReady: Bool {
+        get { self[WelcomeReadyKey.self] }
+        set { self[WelcomeReadyKey.self] = newValue }
+    }
+}
+
 /// Fades and lifts content in, one after another. With Reduce Motion it only fades.
 struct WelcomeAppear: ViewModifier {
     let delay: Double
     @State private var shown = false
+    @Environment(\.welcomeReady) private var ready
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
             .opacity(shown ? 1 : 0)
             .offset(y: shown || reduceMotion ? 0 : 14)
-            .onAppear {
-                withAnimation(.easeOut(duration: reduceMotion ? 0.2 : 0.55).delay(reduceMotion ? 0 : delay)) {
-                    shown = true
-                }
-            }
+            .onAppear { if ready { reveal() } }
+            .onChange(of: ready) { _, nowReady in if nowReady { reveal() } }
+    }
+
+    private func reveal() {
+        guard !shown else { return }
+        withAnimation(.easeOut(duration: reduceMotion ? 0.2 : 0.55).delay(reduceMotion ? 0 : delay)) {
+            shown = true
+        }
     }
 }
 

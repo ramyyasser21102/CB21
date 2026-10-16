@@ -19,18 +19,28 @@ final class WelcomeWindowController: NSObject, NSWindowDelegate {
     func show(service: CaptureService) {
         self.service = service
         if window == nil {
-            let hosting = NSHostingController(rootView: WelcomeView(service: service, finish: { [weak self] in
+            let size = NSSize(width: 560, height: 640)
+            let hosting = NSHostingView(rootView: WelcomeView(service: service, finish: { [weak self] in
                 self?.window?.close()
             }))
-            let window = NSWindow(contentViewController: hosting)
-            window.styleMask = [.titled, .closable, .fullSizeContentView]
+            // The window decides the size. Letting the hosting view resize it is what can make the first frames jump.
+            hosting.sizingOptions = []
+            let window = NSWindow(
+                contentRect: NSRect(origin: .zero, size: size),
+                styleMask: [.titled, .closable, .fullSizeContentView],
+                backing: .buffered,
+                defer: false
+            )
+            window.contentView = hosting
             window.titleVisibility = .hidden
             window.titlebarAppearsTransparent = true
             window.isMovableByWindowBackground = true
             window.backgroundColor = .black
             window.appearance = NSAppearance(named: .darkAqua)
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 560, height: 640))
+            window.setContentSize(size)
+            window.contentMinSize = size
+            window.contentMaxSize = size
             window.delegate = self
             window.center()
             self.window = window
@@ -42,8 +52,7 @@ final class WelcomeWindowController: NSObject, NSWindowDelegate {
     /// Closing at any step counts as done, so the window doesn't come back by itself.
     func windowWillClose(_ notification: Notification) {
         service?.settings.update { $0.welcomeCompleted = true }
-        // A new page flow and animation each time it is reopened.
-        window?.contentViewController = nil
+        // Reopening builds a fresh window, so the pages and animations start from the beginning.
         window = nil
     }
 }
