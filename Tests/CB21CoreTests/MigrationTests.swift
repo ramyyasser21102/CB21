@@ -69,3 +69,46 @@ private func tempPath() throws -> (dir: URL, path: String) {
     #expect(throws: StoreError.newerDatabase) { _ = try ClipStore.openRecovering(at: URL(fileURLWithPath: path)) }
     #expect(FileManager.default.fileExists(atPath: path))
 }
+
+// MARK: Migrations 2 and 3 (pinned_at, search_text)
+
+/// A database exactly as version 1.0 left it: `user_version` 1, with `source_app_name`.
+private func makeVersion1Database(at path: String, clipID: UUID) throws {
+    try makeOldDatabase(at: path, clipID: clipID)
+    var db: OpaquePointer?
+    #expect(sqlite3_open(path, &db) == SQLITE_OK)
+    defer { sqlite3_close(db) }
+    #expect(sqlite3_exec(db, "ALTER TABLE clips ADD COLUMN source_app_name TEXT; UPDATE clips SET source_app_name = 'Notes'; PRAGMA user_version = 1;", nil, nil, nil) == SQLITE_OK)
+}
+
+@Test func freshDatabaseHasThePinAndSearchColumns() async throws {
+    let store = try ClipStore.inMemory()
+    #expect(try await store.hasColumn("pinned_at", in: "clips"))
+    #expect(try await store.hasColumn("search_text", in: "clips"))
+    #expect(ClipStore.latestSchemaVersion >= 3)
+}
+
+@Test func version1DatabaseGainsTheNewColumnsAndKeepsEverything() async throws {
+    let (dir, path) = try tempPath()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let id = UUID()
+    try makeVersion1Database(at: path, clipID: id)
+    let store = try ClipStore(path: path)
+    #expect(try await store.schemaVersion() == ClipStore.latestSchemaVersion)
+    #expect(try await store.hasColumn("pinned_at", in: "clips"))
+    #expect(try await store.hasColumn("search_text", in: "clips"))
+    let clips = try await store.list()
+    #expect(clips.map(\.id) == [id])
+    #expect(clips.first?.sourceAppName == "Notes")
+    #expect(clips.first?.preferred.data == Data("abc".utf8))
+}
+
+@Test func versionZeroDatabaseGoesStraightToTheLatestVersion() async throws {
+    let (dir, path) = try tempPath()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    try makeOldDatabase(at: path, clipID: UUID())
+    let store = try ClipStore(path: path)
+    #expect(try await store.schemaVersion() == ClipStore.latestSchemaVersion)
+    #expect(try await store.hasColumn("pinned_at", in: "clips"))
+    #expect(try await store.hasColumn("search_text", in: "clips"))
+}

@@ -63,11 +63,15 @@ public actor ClipStore {
     }
 
     /// The schema version this build writes. Bump it and add a case to `migrationSteps` to change the schema.
-    static let latestSchemaVersion = 1
+    static let latestSchemaVersion = 3
 
     /// Steps that bring an older database up to `latestSchemaVersion`. Index 0 takes version 0 to 1.
     private static let migrationSteps: [String] = [
         "ALTER TABLE clips ADD COLUMN source_app_name TEXT",
+        // 2: when a Clip was pinned. NULL means not pinned.
+        "ALTER TABLE clips ADD COLUMN pinned_at REAL",
+        // 3: normalized text that Search matches against. Filled in by later steps.
+        "ALTER TABLE clips ADD COLUMN search_text TEXT",
     ]
 
     private static func migrate(_ db: OpaquePointer) throws {
