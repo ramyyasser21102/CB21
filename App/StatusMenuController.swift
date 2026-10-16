@@ -154,7 +154,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             menu.addItem(entry)
         }
         if !model.rows.isEmpty {
-            menu.addItem(note("Hold ⌥ to pin or unpin a clip"))
+            menu.addItem(note("Hold ⌥ and click a clip to pin or unpin it"))
         }
         menu.addItem(.separator())
 
@@ -190,7 +190,13 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         case .image: title = "Image"; symbol = "photo"
         case .pdf: title = "PDF"; symbol = "doc.richtext"
         }
-        let entry = item(title) { [service] in service.recopy(id: row.id) }
+        let entry = item(title) { [service] in
+            switch MenuClick.intent(optionHeld: NSEvent.modifierFlags.contains(.option), isPinned: row.isPinned) {
+            case .copy: service.recopy(id: row.id)
+            case .pin: service.setPinned(row.id, true)
+            case .unpin: service.setPinned(row.id, false)
+            }
+        }
         if let thumbnail = row.thumbnail {
             entry.image = thumbnail
         } else if let symbol {
