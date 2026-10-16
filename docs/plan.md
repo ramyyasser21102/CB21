@@ -132,6 +132,9 @@ Each step is one branch. **Manual** marks what only the user can verify.
   - Verified automatically: the click decision (plain click copies; ⌥ pins or unpins); build and launch. Not testable by me: holding ⌥ in a real menu.
   - **Manual:** open the menu, hold ⌥ and click a clip: it pins (a star appears and it moves to the top section on the next open). Hold ⌥ and click it again: it unpins. A plain click still copies. Also try ⌥ and Return on a highlighted row. If the row's title also changes to "Pin “…”" while you hold ⌥, that is the second route working. If neither pins, tell me exactly what you press and what you see.
 
+- [x] S14 `fix/history-content-fills-window`: with the window now opening large (S12), the History window's content (search box, list, Detail pane) stayed at its small natural height and sat in a strip at the bottom, with a big empty area above (a screenshot you sent). An earlier render of mine already showed this and I wrongly blamed the render method. The split view doesn't stretch on its own; the list and Detail pane and the split view itself now have flexible frames (`maxWidth` and `maxHeight` infinite, top-aligned). Verified with a render of the window with five clips (two pinned): the list now runs the full height from the top; the Detail pane isn't drawn by that render method, so it is only seen in your screenshots.
+  - **Manual:** open the History window: the search box is at the top of the list, the list fills the window down to the bottom edge, and the Detail pane on the right fills its half. Resize the window taller and wider: everything should keep filling it.
+
 ## Phase 6 — Release
 
 - [x] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**
