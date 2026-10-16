@@ -148,13 +148,53 @@ struct WelcomeClipboardPage: View {
 }
 
 struct WelcomeLoginPage: View {
+    @State private var status = LaunchAtLogin.status
+    @State private var error: String?
+
     var body: some View {
         WelcomePageLayout(
             title: "Start with your Mac",
             message: "Open cb21 automatically when you log in, so your history is always being kept.",
             icon: { symbol("power") },
-            extra: { EmptyView() }
+            extra: {
+                VStack(spacing: 12) {
+                    Toggle(isOn: Binding(
+                        get: { status != .off },
+                        set: { enabled in
+                            error = LaunchAtLogin.set(enabled)
+                            status = LaunchAtLogin.status
+                        }
+                    )) {
+                        Text("Open cb21 at login").font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
+                    }
+                    .toggleStyle(.switch)
+                    .tint(.white)
+                    .padding(16)
+                    .frame(maxWidth: 420)
+                    .background(RoundedRectangle(cornerRadius: 12).stroke(WelcomeStyle.faint, lineWidth: 1))
+
+                    if status == .needsApproval {
+                        Text("macOS needs you to allow cb21 once in Login Items.")
+                            .font(.system(size: 14)).foregroundStyle(WelcomeStyle.secondary)
+                        Button("Open Login Items") {
+                            if let url = URL(string: SystemSettingsLink.loginItems) { NSWorkspace.shared.open(url) }
+                        }
+                        .buttonStyle(WelcomeOutlineButtonStyle())
+                    }
+                    if let error {
+                        Text(error).font(.system(size: 13)).foregroundStyle(WelcomeStyle.secondary)
+                    }
+                }
+                .animation(.easeOut(duration: 0.2), value: status)
+            }
         )
+        // The user may approve it in System Settings and come back to this page.
+        .task {
+            while !Task.isCancelled {
+                status = LaunchAtLogin.status
+                try? await Task.sleep(for: .milliseconds(800))
+            }
+        }
     }
 }
 
