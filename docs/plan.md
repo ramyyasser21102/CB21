@@ -213,6 +213,17 @@ Order: the stored facts and logic in Core first (9.1–9.3), then a spike that h
   - **Manual (final checklist):** open the History window. There is a Search box above the list: typing narrows the list live (try a word from a link's address, a file name, a source app, and an accented letter), and the "x" clears it. Pinned clips are under a "Pinned" heading above the rest. Each row shows ⌘1 to ⌘9 on the first nine visible rows and a star button left of Copy: click it to pin or unpin; right-click a single row for Pin or Unpin. Press ⌘2: the second visible row is copied and the window closes; press ⌥⌘2 to pin or unpin it instead. Delete a pinned clip: it asks first. Clear All…: if some are pinned the box "Also delete pinned clips" is unticked and only the others go; tick it to delete everything. The same Clear all… in the menu behaves the same.
 - [x] 9.8 `docs/readme-search-pins`: README features, `MARKETING_VERSION` 1.1.0. Publishing 1.1.0 is a separate decision.
 
+## Phase 10 — Folder access (CB-12)
+
+Decided with the user: ask for Desktop, Documents and Downloads on purpose (not Full Disk Access), because macOS prompts were appearing at odd moments, from the Detail pane reading a selected file clip.
+
+- [ ] 10.1 `feat/folder-access-core`: `ProtectedFolder` (Desktop, Documents, Downloads), which folder a path is inside, and `FolderAccess.check` mapping a listing attempt to allowed, denied or missing (the listing is injected so it is tested); a saved `folderAccessRequested` setting. Core tests.
+- [ ] 10.2 `feat/folder-access-guard`: the Detail pane never reads a file inside a protected folder until access is allowed; a locked placeholder with an "Allow access" button instead; a quiet check at launch only if access was requested before. **Manual**
+- [ ] 10.3 `feat/welcome-files`: a "Files" page in the Welcome window with live status for the three folders, "Allow access" and "Open System Settings"; the flow grows to six pages. **Manual**
+- [ ] 10.4 `feat/settings-file-access`: the same status and buttons in Settings > General. **Manual**
+- [ ] 10.5 `feat/recopy-file-reference`: Recopy writes file clips as proper file references when access allows, otherwise as before. **Manual**
+- [ ] 10.6 `docs/readme-folder-access`: README permissions section.
+
 ## Hand-back note
 
 When a step stops for the user, write this under the step: what was built and the branch; what was verified automatically; what was not, with exact steps to try and what to look for; what was tried and where it stopped; which later steps are independent.
