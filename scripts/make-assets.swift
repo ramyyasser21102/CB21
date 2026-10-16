@@ -79,20 +79,52 @@ try menuBarImageSet(name: "MenuBarDefault", svgPath: "\(root)/design/menubar-def
 try menuBarImageSet(name: "MenuBarPaused", svgPath: "\(root)/design/menubar-paused.svg")
 try welcomeLogoImageSet(pngPath: "\(root)/docs/assets/CB21.png")
 
-// MARK: App icon: the artwork at 824 pt inside a 1024 pt canvas, as the macOS icon grid expects.
+// MARK: App icon: a full-bleed square.
+//
+// macOS applies the icon shape itself and expects artwork that fills the whole 1024 x 1024 square, with no padding
+// and no transparent corners. Artwork that is already a rounded shape, or sits inside margins, gets put on a grey
+// plate by the system. The source image is a squircle with transparent corners, so it is scaled up from the centre
+// until every pixel along the border is opaque, and every icon size is made from that master.
 
 let source = NSImage(contentsOfFile: "\(root)/docs/assets/CB21.png")!
+let masterSize = 1024
+
+func fullBleedMaster(scale: CGFloat) -> NSBitmapImageRep {
+    bitmap(width: masterSize, height: masterSize) { rect in
+        let cover = max(rect.width / source.size.width, rect.height / source.size.height) * scale
+        let w = source.size.width * cover, h = source.size.height * cover
+        source.draw(in: NSRect(x: (rect.width - w) / 2, y: (rect.height - h) / 2, width: w, height: h),
+                    from: .zero, operation: .sourceOver, fraction: 1)
+    }
+}
+
+func borderIsOpaque(_ rep: NSBitmapImageRep) -> Bool {
+    let last = masterSize - 1
+    for t in stride(from: 0, through: last, by: 4) {
+        for (x, y) in [(t, 0), (t, last), (0, t), (last, t)] {
+            if (rep.colorAt(x: x, y: y)?.alphaComponent ?? 0) < 0.999 { return false }
+        }
+    }
+    return true
+}
+
+var bleedScale: CGFloat = 1.0
+var master = fullBleedMaster(scale: bleedScale)
+while !borderIsOpaque(master) && bleedScale < 2.0 {
+    bleedScale += 0.005
+    master = fullBleedMaster(scale: bleedScale)
+}
+precondition(borderIsOpaque(master), "could not make the icon full-bleed")
+print("app icon scaled by \(String(format: "%.3f", bleedScale)) to fill the square")
+let masterImage = NSImage(size: NSSize(width: masterSize, height: masterSize))
+masterImage.addRepresentation(master)
+
 let iconDir = "\(catalog)/AppIcon.appiconset"
 var iconImages: [[String: String]] = []
 for (points, scale) in [(16, 1), (16, 2), (32, 1), (32, 2), (128, 1), (128, 2), (256, 1), (256, 2), (512, 1), (512, 2)] {
     let px = points * scale
     let rep = bitmap(width: px, height: px) { rect in
-        let side = rect.width * 824 / 1024
-        let aspect = source.size.width / source.size.height
-        let w = aspect >= 1 ? side : side * aspect
-        let h = aspect >= 1 ? side / aspect : side
-        source.draw(in: NSRect(x: (rect.width - w) / 2, y: (rect.height - h) / 2, width: w, height: h),
-                    from: .zero, operation: .sourceOver, fraction: 1)
+        masterImage.draw(in: rect, from: .zero, operation: .copy, fraction: 1)
     }
     let file = "icon_\(points)x\(points)@\(scale)x.png"
     try write(rep, to: "\(iconDir)/\(file)")
