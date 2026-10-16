@@ -67,7 +67,7 @@ public struct Clip: Sendable, Equatable, Identifiable {
 }
 
 extension Representation.Kind {
-    /// Maps a pasteboard type identifier to a Kind. Types cb21 doesn't keep return nil.
+    /// Maps a pasteboard type identifier to a Kind. Types CB21 doesn't keep return nil.
     public static func classify(_ typeIdentifier: String) -> Representation.Kind? {
         switch typeIdentifier {
         case "public.png", "public.tiff", "public.jpeg", "public.heic", "com.compuserve.gif":

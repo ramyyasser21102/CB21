@@ -66,7 +66,7 @@ private func symbol(_ name: String) -> some View {
 struct WelcomeIntroPage: View {
     var body: some View {
         WelcomePageLayout(
-            title: "cb21",
+            title: "CB21",
             message: "Everything you copy, remembered.\nPaste anything again without copying it twice.",
             icon: { WelcomeLogo() },
             extra: { EmptyView() }
@@ -87,7 +87,7 @@ struct WelcomeClipboardPage: View {
     var body: some View {
         WelcomePageLayout(
             title: "Clipboard access",
-            message: "cb21 needs to read the clipboard to remember it. macOS asks you to allow this once.",
+            message: "CB21 needs to read the clipboard to remember it. macOS asks you to allow this once.",
             icon: { symbol("doc.on.clipboard") },
             extra: { status }
         )
@@ -151,7 +151,7 @@ struct WelcomeLoginPage: View {
     var body: some View {
         WelcomePageLayout(
             title: "Start with your Mac",
-            message: "Open cb21 automatically when you log in, so your history is always being kept.",
+            message: "Open CB21 automatically when you log in, so your history is always being kept.",
             icon: { symbol("power") },
             extra: {
                 VStack(spacing: 12) {
@@ -162,7 +162,7 @@ struct WelcomeLoginPage: View {
                             status = LaunchAtLogin.status
                         }
                     )) {
-                        Text("Open cb21 at login").font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
+                        Text("Open CB21 at login").font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
                     }
                     .toggleStyle(.switch)
                     .tint(.white)
@@ -171,7 +171,7 @@ struct WelcomeLoginPage: View {
                     .background(RoundedRectangle(cornerRadius: 12).stroke(WelcomeStyle.faint, lineWidth: 1))
 
                     if status == .needsApproval {
-                        Text("macOS needs you to allow cb21 once in Login Items.")
+                        Text("macOS needs you to allow CB21 once in Login Items.")
                             .font(.system(size: 14)).foregroundStyle(WelcomeStyle.secondary)
                         Button("Open Login Items") {
                             if let url = URL(string: SystemSettingsLink.loginItems) { NSWorkspace.shared.open(url) }
@@ -225,7 +225,7 @@ struct WelcomeShortcutsPage: View {
 
 struct WelcomePrivacyPage: View {
     private let points: [(String, String, String)] = [
-        ("wifi.slash", "No network", "cb21 never connects to the internet."),
+        ("wifi.slash", "No network", "CB21 never connects to the internet."),
         ("internaldrive", "Stored on your Mac", "History stays on this Mac and is not encrypted."),
         ("pause.circle", "You stay in control", "Password-manager copies are skipped, and Pause covers the rest."),
     ]

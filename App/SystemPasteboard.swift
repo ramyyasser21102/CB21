@@ -7,7 +7,7 @@ final class SystemPasteboard: PasteboardReading, @unchecked Sendable {
 
     var changeCount: Int { pasteboard.changeCount }
 
-    /// The "Paste from Other Apps" setting for cb21 (macOS 15.4 and later; `.unknown` before that).
+    /// The "Paste from Other Apps" setting for CB21 (macOS 15.4 and later; `.unknown` before that).
     var accessStatus: ClipboardAccess {
         guard #available(macOS 15.4, *) else { return .unknown }
         switch pasteboard.accessBehavior {

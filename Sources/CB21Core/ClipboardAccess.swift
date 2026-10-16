@@ -1,5 +1,5 @@
-/// Whether macOS lets cb21 read the clipboard in the background ("Paste from Other Apps", macOS 15.4 and later).
-/// cb21 can't change this itself. It can only show the state and send the user to System Settings.
+/// Whether macOS lets CB21 read the clipboard in the background ("Paste from Other Apps", macOS 15.4 and later).
+/// CB21 can't change this itself. It can only show the state and send the user to System Settings.
 public enum ClipboardAccess: Sendable, Equatable, CaseIterable {
     /// macOS has never asked: the app isn't listed in System Settings yet. A first read triggers the system alert.
     case notAsked
@@ -29,15 +29,15 @@ public enum ClipboardAccess: Sendable, Equatable, CaseIterable {
     public var explanation: String {
         switch self {
         case .notAsked:
-            "macOS is about to ask. Choose Always Allow so cb21 can keep your history."
+            "macOS is about to ask. Choose Always Allow so CB21 can keep your history."
         case .ask:
-            "cb21 can't capture reliably while macOS asks for every copy. In System Settings, choose Always Allow."
+            "CB21 can't capture reliably while macOS asks for every copy. In System Settings, choose Always Allow."
         case .alwaysAllow:
-            "cb21 can read the clipboard. You're set."
+            "CB21 can read the clipboard. You're set."
         case .alwaysDeny:
-            "cb21 can't capture anything right now. In System Settings, choose Always Allow."
+            "CB21 can't capture anything right now. In System Settings, choose Always Allow."
         case .unknown:
-            "This version of macOS doesn't report clipboard access. If copies don't show up in cb21, check Privacy & Security in System Settings."
+            "This version of macOS doesn't report clipboard access. If copies don't show up in CB21, check Privacy & Security in System Settings."
         }
     }
 }

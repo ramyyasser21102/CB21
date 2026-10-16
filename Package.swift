@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "cb21",
+    name: "CB21",
     platforms: [.macOS(.v14)],
     products: [
         .library(name: "CB21Core", targets: ["CB21Core"]),

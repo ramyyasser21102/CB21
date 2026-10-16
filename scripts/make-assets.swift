@@ -77,11 +77,11 @@ func welcomeLogoImageSet(pngPath: String) throws {
 
 try menuBarImageSet(name: "MenuBarDefault", svgPath: "\(root)/design/menubar-default.svg")
 try menuBarImageSet(name: "MenuBarPaused", svgPath: "\(root)/design/menubar-paused.svg")
-try welcomeLogoImageSet(pngPath: "\(root)/docs/assets/cb21.png")
+try welcomeLogoImageSet(pngPath: "\(root)/docs/assets/CB21.png")
 
 // MARK: App icon: the artwork at 824 pt inside a 1024 pt canvas, as the macOS icon grid expects.
 
-let source = NSImage(contentsOfFile: "\(root)/docs/assets/cb21.png")!
+let source = NSImage(contentsOfFile: "\(root)/docs/assets/CB21.png")!
 let iconDir = "\(catalog)/AppIcon.appiconset"
 var iconImages: [[String: String]] = []
 for (points, scale) in [(16, 1), (16, 2), (32, 1), (32, 2), (128, 1), (128, 2), (256, 1), (256, 2), (512, 1), (512, 2)] {

@@ -15,7 +15,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         menu.delegate = self
         statusItem.menu = menu
         statusItem.button?.image = Self.icon(paused: false)
-        statusItem.button?.setAccessibilityLabel("cb21 clipboard history")
+        statusItem.button?.setAccessibilityLabel("CB21 clipboard history")
         service.model.onPausedChange = { [weak self] paused in
             self?.statusItem.button?.image = Self.icon(paused: paused)
         }
@@ -54,7 +54,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         let model = service.model
 
         if model.pasteboardAccessDenied {
-            menu.addItem(note("cb21 can't read the clipboard"))
+            menu.addItem(note("CB21 can't read the clipboard"))
             menu.addItem(item("Allow in System Settings…") {
                 if let url = URL(string: SystemSettingsLink.pasteboard) {
                     NSWorkspace.shared.open(url)
@@ -96,7 +96,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         menu.addItem(clear)
         menu.addItem(item("Settings…", key: ",") { [service] in SettingsWindowController.shared.show(service: service) })
         menu.addItem(item("Welcome…") { [service] in WelcomeWindowController.shared.show(service: service) })
-        menu.addItem(item("Quit cb21", key: "q") { NSApp.terminate(nil) })
+        menu.addItem(item("Quit CB21", key: "q") { NSApp.terminate(nil) })
     }
 
     // MARK: Items

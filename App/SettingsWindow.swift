@@ -11,7 +11,7 @@ final class SettingsWindowController {
     func show(service: CaptureService) {
         if window == nil {
             let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(service: service)))
-            window.title = "cb21 Settings"
+            window.title = "CB21 Settings"
             window.styleMask = [.titled, .closable]
             window.isReleasedWhenClosed = false
             window.center()
@@ -94,7 +94,7 @@ struct SettingsView: View {
                     }
                 ))
                 if launchStatus == .needsApproval {
-                    Text("Allow cb21 in System Settings > General > Login Items.")
+                    Text("Allow CB21 in System Settings > General > Login Items.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if let launchError {

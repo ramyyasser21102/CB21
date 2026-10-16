@@ -23,7 +23,7 @@ public struct PasteboardSnapshot: Sendable, Equatable {
     }
 }
 
-/// The system pasteboard, as far as cb21 needs it. The app target wraps `NSPasteboard`.
+/// The system pasteboard, as far as CB21 needs it. The app target wraps `NSPasteboard`.
 public protocol PasteboardReading: Sendable {
     var changeCount: Int { get }
     func snapshot() -> PasteboardSnapshot
@@ -46,7 +46,7 @@ public enum PauseDuration: Sendable, Equatable {
 public enum PollOutcome: Sendable, Equatable {
     case unchanged
     case skipped(SkipReason)
-    /// The pasteboard changed but held nothing cb21 can store.
+    /// The pasteboard changed but held nothing CB21 can store.
     case empty
     case captured(CaptureResult)
 }

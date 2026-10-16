@@ -1,3 +1,3 @@
 public enum CB21Core {
-    public static let name = "cb21"
+    public static let name = "CB21"
 }

@@ -30,6 +30,7 @@ final class CaptureService {
             return URL(fileURLWithPath: override, isDirectory: true)
         }
         return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            // The folder keeps its original lowercase name so existing History is found on any disk format.
             .appendingPathComponent("cb21", isDirectory: true)
     }
 
@@ -122,7 +123,7 @@ final class CaptureService {
         switch problem {
         case .needsModifier: "Include at least one of ⌘, ⌃ or ⌥."
         case .systemReserved: "macOS or common apps already use this shortcut. Choose a different one."
-        case .alreadyUsed: "cb21 already uses this shortcut for something else."
+        case .alreadyUsed: "CB21 already uses this shortcut for something else."
         }
     }
 
@@ -224,7 +225,7 @@ final class CaptureService {
                 }
             }
         } catch {
-            NSLog("cb21: cannot open History: \(error)")
+            NSLog("CB21: cannot open History: \(error)")
         }
     }
 }
