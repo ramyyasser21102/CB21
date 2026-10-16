@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import CB21Core
 
@@ -77,13 +78,72 @@ struct WelcomeIntroPage: View {
 }
 
 struct WelcomeClipboardPage: View {
+    let service: CaptureService
+    @State private var access: ClipboardAccess
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(service: CaptureService) {
+        self.service = service
+        _access = State(initialValue: service.systemPasteboard.accessStatus)
+    }
+
     var body: some View {
         WelcomePageLayout(
             title: "Clipboard access",
-            message: "cb21 needs to read the clipboard to remember it. macOS may ask you to allow this.",
+            message: "cb21 needs to read the clipboard to remember it. macOS asks you to allow this once.",
             icon: { symbol("doc.on.clipboard") },
-            extra: { EmptyView() }
+            extra: { status }
         )
+        // While this page is showing: trigger the system prompt if it never appeared, then keep the status
+        // live, because the user may change it in System Settings and come back.
+        .task {
+            if access.shouldTriggerPrompt {
+                try? await Task.sleep(for: .milliseconds(900))
+                let pasteboard = service.systemPasteboard
+                await Task.detached { pasteboard.triggerAccessPrompt() }.value
+            }
+            while !Task.isCancelled {
+                let current = service.systemPasteboard.accessStatus
+                if current != access {
+                    withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.5, dampingFraction: 0.7)) {
+                        access = current
+                    }
+                }
+                try? await Task.sleep(for: .milliseconds(700))
+            }
+        }
+    }
+
+    private var status: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: access.isReady ? "checkmark.circle.fill" : "circle.dashed")
+                    .font(.system(size: 26))
+                    .foregroundStyle(access.isReady ? .white : WelcomeStyle.secondary)
+                    .contentTransition(reduceMotion ? .identity : .symbolEffect(.replace))
+                    .symbolEffect(.bounce, options: reduceMotion ? .nonRepeating.speed(0) : .nonRepeating, value: access.isReady)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(access.title).font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
+                    Text(access.explanation)
+                        .font(.system(size: 14)).foregroundStyle(WelcomeStyle.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(16)
+            .frame(maxWidth: 420)
+            .background(RoundedRectangle(cornerRadius: 12).stroke(WelcomeStyle.faint, lineWidth: 1))
+            .accessibilityElement(children: .combine)
+
+            if access.needsSystemSettings {
+                Button("Open System Settings") {
+                    if let url = URL(string: SystemSettingsLink.pasteboard) { NSWorkspace.shared.open(url) }
+                }
+                .buttonStyle(WelcomeOutlineButtonStyle())
+                .transition(.opacity)
+            }
+        }
     }
 }
 

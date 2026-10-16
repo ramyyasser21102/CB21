@@ -20,6 +20,20 @@ struct WelcomePrimaryButtonStyle: ButtonStyle {
     }
 }
 
+/// A white outline with white text, for actions that aren't the main one.
+struct WelcomeOutlineButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 14, weight: .medium))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
+            .overlay(Capsule().stroke(.white.opacity(configuration.isPressed ? 0.4 : 0.8), lineWidth: 1))
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
 /// Quiet text button for Back and Skip.
 struct WelcomeQuietButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {

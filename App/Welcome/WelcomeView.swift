@@ -37,7 +37,7 @@ struct WelcomeView: View {
     private func page(_ page: WelcomeFlow.Page) -> some View {
         switch page {
         case .welcome: WelcomeIntroPage()
-        case .clipboard: WelcomeClipboardPage()
+        case .clipboard: WelcomeClipboardPage(service: service)
         case .login: WelcomeLoginPage()
         case .shortcuts: WelcomeShortcutsPage()
         case .privacy: WelcomePrivacyPage()

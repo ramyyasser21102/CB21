@@ -8,6 +8,8 @@ final class CaptureService {
     static let shared = CaptureService()
 
     let model = HistoryModel()
+    /// The real pasteboard. Also used by the Welcome window to check and trigger clipboard access.
+    let systemPasteboard = SystemPasteboard()
     let settings = SettingsModel()
     private let hotKeys = GlobalHotKeys()
     private var historyHotKeyID: UInt32?
@@ -190,7 +192,7 @@ final class CaptureService {
             )
             store = opened.store
             recoveredFrom = opened.recoveredFrom
-            let pasteboard = SystemPasteboard()
+            let pasteboard = systemPasteboard
             let engine = CaptureEngine(pasteboard: pasteboard, store: opened.store)
             self.engine = engine
             if let saved = settings.values.historyShortcut {
