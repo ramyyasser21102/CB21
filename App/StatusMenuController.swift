@@ -21,6 +21,8 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         self.service = service
         super.init()
         menu.delegate = self
+        // The menu's width is set here, not by the longest clip. Rows and the search field stretch to it.
+        menu.minimumWidth = ClipMenuRowView.size.width
         searchView.onQuickSelect = { [weak self] row in self?.quickSelect(row: row) ?? false }
         searchView.onChange = { [weak self] query in
             self?.searchQuery = query
@@ -159,6 +161,9 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
                 self.service.setPinned(row.id, pinned)
                 self.rebuildClipItems()
             }
+            // The menu sizes itself to the widest item title, even for an item with a custom view, so a long clip
+            // would widen the whole menu. The row draws its own text; this short title is only a fallback.
+            primary.title = String(title.prefix(24))
             primary.view = view
             rowViews[ObjectIdentifier(primary)] = view
             result.append(primary)
