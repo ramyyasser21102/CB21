@@ -11,6 +11,9 @@ No account, no ads, no network access, no telemetry.
 ## Features
 
 - **Remembers everything you copy**: text, rich text, images, files and links.
+- **Search** in the menu bar menu and in the History window: just type. It matches text, links, file names and the app a clip came from, ignoring case and accents.
+- **Quick select**: ⌘1 to ⌘9 copy one of the first nine clips straight from the menu or the History window.
+- **Pin clips** you use often: they stay on top and are never deleted to make room. In the menu, hold ⌥ on a row to pin or unpin it; in the History window use the star.
 - **Menu bar list** of your 10 most recent copies. Click one to copy it back.
 - **History window** with the full list. Select several clips with Shift or Cmd-click, then delete them. Each row has a Copy button that copies the clip, makes it the most recent and closes the window so you can paste straight away.
 - **Global shortcuts** (all optional, you choose the keys): open the History window, open the menu bar list, and pause or resume capture.
