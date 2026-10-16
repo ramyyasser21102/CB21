@@ -15,6 +15,8 @@ final class HistoryModel {
         let sourceAppName: String?
         /// Normalized text Search matches against, kept in memory so the menu can filter instantly.
         let searchText: String
+        let isPinned: Bool
+        let lastUsedAt: Date
     }
 
     static let menuLimit = 10
@@ -24,7 +26,13 @@ final class HistoryModel {
     private var thumbnails: [UUID: NSImage] = [:]
 
     /// The latest Clips, as shown in the menu.
-    var menuRows: [Row] { Array(rows.prefix(Self.menuLimit)) }
+    var menuRows: [Row] {
+        let list = MenuList.split(rows, isPinned: \.isPinned, recentLimit: Self.menuLimit)
+        return list.pinned + list.recent
+    }
+
+    /// The Clip used most recently, pinned or not. It gets the dot.
+    var mostRecentID: UUID? { rows.max { $0.lastUsedAt < $1.lastUsedAt }?.id }
     private(set) var pasteboardAccessDenied = false
     private(set) var isPaused = false
 
@@ -69,7 +77,8 @@ final class HistoryModel {
             return Row(
                 id: clip.id, preview: clip.preview, thumbnail: thumbnails[clip.id],
                 createdAt: clip.createdAt, byteCount: clip.byteCount, sourceAppName: clip.sourceAppName,
-                searchText: index[clip.id] ?? ""
+                searchText: index[clip.id] ?? "",
+                isPinned: clip.isPinned, lastUsedAt: clip.lastUsedAt
             )
         }
     }
