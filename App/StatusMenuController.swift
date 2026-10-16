@@ -135,7 +135,12 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
                 self?.menu.cancelTracking()
             }
             view.onTogglePin = { [weak self] pinned in
-                self?.service.setPinned(row.id, pinned)
+                guard let self else { return }
+                // The list reorders at once, in memory: a pinned clip jumps into the pinned group and an unpinned one
+                // drops back into the list. The database write is queued by `setPinned` and runs after the menu closes.
+                self.service.model.setPinnedOptimistically(row.id, pinned: pinned)
+                self.service.setPinned(row.id, pinned)
+                self.rebuildClipItems()
             }
             primary.view = view
             rowViews[ObjectIdentifier(primary)] = view

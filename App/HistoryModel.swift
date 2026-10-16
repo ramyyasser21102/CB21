@@ -15,8 +15,10 @@ final class HistoryModel {
         let sourceAppName: String?
         /// Normalized text Search matches against, kept in memory so the menu can filter instantly.
         let searchText: String
-        let isPinned: Bool
+        let pinnedAt: Date?
         let lastUsedAt: Date
+
+        var isPinned: Bool { pinnedAt != nil }
     }
 
     static let menuLimit = 10
@@ -29,6 +31,21 @@ final class HistoryModel {
     var menuRows: [Row] {
         let list = MenuList.split(rows, isPinned: \.isPinned, recentLimit: Self.menuLimit)
         return list.pinned + list.recent
+    }
+
+    /// Pins or unpins a row in memory and puts the list in its proper order straight away. The menu uses this when a
+    /// star is clicked, because it can't wait for the database while it is open; the real write follows, and the next
+    /// refresh from the database gives the same result.
+    func setPinnedOptimistically(_ id: UUID, pinned: Bool, at date: Date = Date()) {
+        let updated = rows.map { row -> Row in
+            guard row.id == id else { return row }
+            return Row(
+                id: row.id, preview: row.preview, thumbnail: row.thumbnail, createdAt: row.createdAt, byteCount: row.byteCount,
+                sourceAppName: row.sourceAppName, searchText: row.searchText,
+                pinnedAt: pinned ? (row.pinnedAt ?? date) : nil, lastUsedAt: row.lastUsedAt
+            )
+        }
+        rows = PinOrder.sorted(updated, isPinned: \.isPinned, pinnedAt: \.pinnedAt, lastUsedAt: \.lastUsedAt)
     }
 
     /// The Clip used most recently, pinned or not. It gets the dot.
@@ -78,7 +95,7 @@ final class HistoryModel {
                 id: clip.id, preview: clip.preview, thumbnail: thumbnails[clip.id],
                 createdAt: clip.createdAt, byteCount: clip.byteCount, sourceAppName: clip.sourceAppName,
                 searchText: index[clip.id] ?? "",
-                isPinned: clip.isPinned, lastUsedAt: clip.lastUsedAt
+                pinnedAt: clip.pinnedAt, lastUsedAt: clip.lastUsedAt
             )
         }
     }
