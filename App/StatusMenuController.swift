@@ -56,7 +56,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         if model.pasteboardAccessDenied {
             menu.addItem(note("cb21 can't read the clipboard"))
             menu.addItem(item("Allow in System Settings…") {
-                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy") {
+                if let url = URL(string: SystemSettingsLink.pasteboard) {
                     NSWorkspace.shared.open(url)
                 }
             })

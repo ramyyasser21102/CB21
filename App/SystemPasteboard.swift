@@ -7,12 +7,23 @@ final class SystemPasteboard: PasteboardReading, @unchecked Sendable {
 
     var changeCount: Int { pasteboard.changeCount }
 
-    /// True when the user has set "Paste from Other Apps" to deny for cb21 (macOS 15.4 and later).
-    var isAccessDenied: Bool {
-        if #available(macOS 15.4, *) {
-            return pasteboard.accessBehavior == .alwaysDeny
+    /// The "Paste from Other Apps" setting for cb21 (macOS 15.4 and later; `.unknown` before that).
+    var accessStatus: ClipboardAccess {
+        guard #available(macOS 15.4, *) else { return .unknown }
+        switch pasteboard.accessBehavior {
+        case .default: return .notAsked
+        case .ask: return .ask
+        case .alwaysAllow: return .alwaysAllow
+        case .alwaysDeny: return .alwaysDeny
+        @unknown default: return .unknown
         }
-        return false
+    }
+
+    var isAccessDenied: Bool { accessStatus == .alwaysDeny }
+
+    /// Reads the clipboard once so macOS shows its permission alert now, while the user is looking.
+    func triggerAccessPrompt() {
+        _ = pasteboard.data(forType: .string)
     }
 
     func snapshot() -> PasteboardSnapshot {
