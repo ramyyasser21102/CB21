@@ -31,13 +31,18 @@ public struct Clip: Sendable, Equatable, Identifiable {
     public var lastUsedAt: Date
     /// The app that was in front when this Clip was captured, when known.
     public let sourceAppName: String?
+    /// When the user pinned this Clip. Nil means not pinned.
+    public var pinnedAt: Date?
+
+    public var isPinned: Bool { pinnedAt != nil }
 
     public init(
         id: UUID = UUID(),
         representations: [Representation],
         createdAt: Date = Date(),
         lastUsedAt: Date? = nil,
-        sourceAppName: String? = nil
+        sourceAppName: String? = nil,
+        pinnedAt: Date? = nil
     ) {
         precondition(!representations.isEmpty, "A Clip needs at least one Representation")
         self.id = id
@@ -45,6 +50,7 @@ public struct Clip: Sendable, Equatable, Identifiable {
         self.createdAt = createdAt
         self.lastUsedAt = lastUsedAt ?? createdAt
         self.sourceAppName = sourceAppName
+        self.pinnedAt = pinnedAt
     }
 
     /// The Representation that stands for the Clip when comparing and previewing.

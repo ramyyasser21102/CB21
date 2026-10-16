@@ -135,7 +135,7 @@ As a user, I want to pin clips I use often, so they stay on top and never get de
 - A Pinned clip appears first, in its own section with a divider, newest pin first, in the menu and in the History window. A star marks it.
 - In the menu, hold ⌥ and a row becomes "Pin…" or "Unpin…". In the History window each row has a star button, and the right-click menu has Pin and Unpin.
 - The menu shows all pinned clips, then the 10 most recent others. ⌘1 to ⌘9 number the first nine rows overall.
-- Limits never delete a Pinned clip. Pinned clips still count toward the totals, so other clips go first; if pinned clips alone exceed the limits, all other clips go and the pinned ones stay.
+- Limits never delete a Pinned clip. Pinned clips still count toward the totals, so other clips go first. If pinned clips alone fill the limits, the other clips go too, except the newest one, which always stays so a fresh copy never vanishes the moment it is captured.
 - "Clear all" keeps Pinned clips unless the user ticks "Also delete pinned clips". Deleting a Pinned clip on purpose asks for a quick confirmation.
 - Pinning doesn't change a Clip's content or the Duplicate rule.
 

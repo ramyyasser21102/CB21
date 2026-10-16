@@ -270,14 +270,15 @@ public actor ClipStore {
         removeImageFiles(files)
     }
 
-    /// Permanently deletes every Clip (Clear all).
-    public func deleteAll() throws {
+    /// Permanently deletes every Clip (Clear all), or every Clip that isn't pinned.
+    public func deleteAll(keepingPinned: Bool = false) throws {
         let db = try handle()
+        let condition = keepingPinned ? " WHERE pinned_at IS NULL" : ""
         var files: [String] = []
-        try query(db, "SELECT file_name FROM representations WHERE file_name IS NOT NULL") {
+        try query(db, "SELECT file_name FROM representations WHERE file_name IS NOT NULL AND clip_id IN (SELECT id FROM clips\(condition))") {
             files.append(String(cString: sqlite3_column_text($0, 0)))
         }
-        try Self.execute(db, "DELETE FROM clips")
+        try Self.execute(db, "DELETE FROM clips\(condition)")
         removeImageFiles(files)
     }
 
@@ -301,6 +302,24 @@ public actor ClipStore {
         }
     }
 
+    /// Pins a Clip so it stays on top and is never evicted. Pinning again keeps the first pin date.
+    public func pin(id: UUID, at date: Date = Date()) throws {
+        let db = try handle()
+        try run(db, "UPDATE clips SET pinned_at = COALESCE(pinned_at, ?) WHERE id = ?") { stmt in
+            sqlite3_bind_double(stmt, 1, date.timeIntervalSince1970)
+            sqlite3_bind_text(stmt, 2, id.uuidString, -1, sqliteTransient)
+        }
+        guard sqlite3_changes(db) == 1 else { throw StoreError(message: "no Clip with id \(id)") }
+    }
+
+    public func unpin(id: UUID) throws {
+        let db = try handle()
+        try run(db, "UPDATE clips SET pinned_at = NULL WHERE id = ?") { stmt in
+            sqlite3_bind_text(stmt, 1, id.uuidString, -1, sqliteTransient)
+        }
+        guard sqlite3_changes(db) == 1 else { throw StoreError(message: "no Clip with id \(id)") }
+    }
+
     /// Moves an existing Clip to the top of History. It is not captured again.
     public func recopy(id: UUID, at date: Date = Date()) throws {
         let db = try handle()
@@ -316,14 +335,15 @@ public actor ClipStore {
     /// All Clips, most recently used first.
     public func list() throws -> [Clip] {
         let db = try handle()
-        var rows: [(id: UUID, created: Date, used: Date, source: String?)] = []
-        try query(db, "SELECT id, created_at, last_used_at, source_app_name FROM clips ORDER BY last_used_at DESC, created_at DESC") { stmt in
+        var rows: [(id: UUID, created: Date, used: Date, source: String?, pinned: Date?)] = []
+        try query(db, "SELECT id, created_at, last_used_at, source_app_name, pinned_at FROM clips ORDER BY pinned_at IS NULL, pinned_at DESC, last_used_at DESC, created_at DESC") { stmt in
             let id = UUID(uuidString: String(cString: sqlite3_column_text(stmt, 0)))!
             rows.append((
                 id,
                 Date(timeIntervalSince1970: sqlite3_column_double(stmt, 1)),
                 Date(timeIntervalSince1970: sqlite3_column_double(stmt, 2)),
-                sqlite3_column_text(stmt, 3).map { String(cString: $0) }
+                sqlite3_column_text(stmt, 3).map { String(cString: $0) },
+                sqlite3_column_type(stmt, 4) == SQLITE_NULL ? nil : Date(timeIntervalSince1970: sqlite3_column_double(stmt, 4))
             ))
         }
         return try rows.compactMap { row -> Clip? in
@@ -350,7 +370,7 @@ public actor ClipStore {
                 ))
             }
             if missingFile || reps.isEmpty { return nil }
-            return Clip(id: row.id, representations: reps, createdAt: row.created, lastUsedAt: row.used, sourceAppName: row.source)
+            return Clip(id: row.id, representations: reps, createdAt: row.created, lastUsedAt: row.used, sourceAppName: row.source, pinnedAt: row.pinned)
         }
     }
 
@@ -470,10 +490,12 @@ public enum CaptureResult: Sendable, Equatable {
 }
 
 extension ClipStore {
-    func usageNewestFirst() throws -> [(id: UUID, bytes: Int)] {
-        var rows: [(id: UUID, bytes: Int)] = []
-        try query(try handle(), "SELECT id, byte_count FROM clips ORDER BY last_used_at DESC, created_at DESC") {
-            rows.append((UUID(uuidString: String(cString: sqlite3_column_text($0, 0)))!, Int(sqlite3_column_int64($0, 1))))
+    func usageNewestFirst() throws -> [(id: UUID, bytes: Int, pinned: Bool)] {
+        var rows: [(id: UUID, bytes: Int, pinned: Bool)] = []
+        try query(try handle(), "SELECT id, byte_count, pinned_at IS NOT NULL FROM clips ORDER BY last_used_at DESC, created_at DESC") {
+            rows.append((UUID(uuidString: String(cString: sqlite3_column_text($0, 0)))!,
+                         Int(sqlite3_column_int64($0, 1)),
+                         sqlite3_column_int($0, 2) != 0))
         }
         return rows
     }
@@ -508,14 +530,21 @@ extension ClipStore {
         return victims.count
     }
 
+    /// Pinned Clips are never victims, but they use up part of the limits. The newest other Clip always stays,
+    /// so a fresh copy never vanishes the moment it is captured.
     private func evictionVictims(for target: Limits) throws -> [UUID] {
+        let usage = try usageNewestFirst()
+        let pinned = usage.filter(\.pinned)
+        let freeItems = max(0, target.maxItems - pinned.count)
+        let freeBytes = max(0, target.maxBytes - pinned.reduce(0) { $0 + $1.bytes })
         var items = 0
         var bytes = 0
         var victims: [UUID] = []
-        for entry in try usageNewestFirst() {
+        for entry in usage where !entry.pinned {
             items += 1
             bytes += entry.bytes
-            if items > target.maxItems || bytes > target.maxBytes {
+            let isNewestOther = items == 1
+            if !isNewestOther && (items > freeItems || bytes > freeBytes) {
                 victims.append(entry.id)
             }
         }
