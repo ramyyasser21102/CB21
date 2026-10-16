@@ -9,31 +9,75 @@ final class HistoryWindowController {
 
     private var window: NSWindow?
 
+    private var hosting: NSHostingView<HistoryView>?
+
     func show(service: CaptureService) {
         if window == nil {
-            let hosting = NSHostingController(rootView: HistoryView(
-                model: service.model,
-                copy: { id in
-                    service.recopy(id: id)
-                    HistoryWindowController.shared.hide()
-                },
-                delete: { service.confirmAndDelete(ids: $0) },
-                setPinned: { service.setPinned($0, $1) },
-                clearAll: { service.confirmAndClearAll() },
-                loadClip: { await service.clip(id: $0) }
-            ))
-            let window = NSWindow(contentViewController: hosting)
+            let hosting = NSHostingView(rootView: makeRoot(service: service, idealSize: Self.minimumSize))
+            let window = NSWindow(
+                contentRect: NSRect(origin: .zero, size: Self.minimumSize),
+                styleMask: [.titled, .closable, .resizable, .miniaturizable],
+                backing: .buffered,
+                defer: false
+            )
+            window.contentView = hosting
             window.title = "CB21 History"
-            window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
             window.level = .floating
             window.isReleasedWhenClosed = false
-            window.setContentSize(NSSize(width: 800, height: 540))
-            window.contentMinSize = NSSize(width: 640, height: 360)
-            window.center()
+            self.hosting = hosting
             self.window = window
+        }
+        // Every time it is opened (not when it is just brought to the front): a spacious size, in the middle of
+        // the screen the pointer is on.
+        if let window, let hosting, !window.isVisible {
+            let frame = Self.openingFrame()
+            // SwiftUI sizes the window to its content's ideal size, so the ideal size is the one chosen here.
+            // Without it the window opened as small as the "No clips yet" message (400 x 210).
+            hosting.rootView = makeRoot(service: service, idealSize: window.contentRect(forFrameRect: frame).size)
+            window.setFrame(frame, display: false)
         }
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
+        if let window {
+            // The toolbar SwiftUI adds once there are clips changes the window's height after it was centered,
+            // so centre it again, once, when it has settled.
+            let opened = window.frame
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                guard window.isVisible, abs(window.frame.minX - opened.minX) < 2 else { return }
+                let screen = window.screen ?? NSScreen.main
+                if let visible = screen?.visibleFrame {
+                    window.setFrame(WindowPlacement.centered(size: window.frame.size, in: visible), display: true)
+                }
+            }
+        }
+    }
+
+    private static let minimumSize = CGSize(width: 720, height: 480)
+
+    private func makeRoot(service: CaptureService, idealSize: CGSize) -> HistoryView {
+        HistoryView(
+            model: service.model,
+            idealSize: idealSize,
+            minimumSize: Self.minimumSize,
+            copy: { id in
+                service.recopy(id: id)
+                HistoryWindowController.shared.hide()
+            },
+            delete: { service.confirmAndDelete(ids: $0) },
+            setPinned: { service.setPinned($0, $1) },
+            clearAll: { service.confirmAndClearAll() },
+            loadClip: { await service.clip(id: $0) }
+        )
+    }
+
+    private static func openingFrame() -> NSRect {
+        let pointer = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { $0.frame.contains(pointer) } ?? NSScreen.main ?? NSScreen.screens[0]
+        return WindowPlacement.centeredFrame(
+            in: screen.visibleFrame,
+            widthFraction: 0.62, heightFraction: 0.74,
+            minimum: CGSize(width: 860, height: 600), maximum: CGSize(width: 1100, height: 860)
+        )
     }
 
     /// Closes the window and hands focus back to the app the user came from, ready to paste.
@@ -53,6 +97,9 @@ final class HistoryWindowController {
 
 struct HistoryView: View {
     let model: HistoryModel
+    /// The size the window opens at, and the smallest it may be resized to.
+    let idealSize: CGSize
+    let minimumSize: CGSize
     /// Puts the Clip on the pasteboard, makes it the most recent, and closes the window.
     let copy: (UUID) -> Void
     /// Deletes Clips, asking first when a pinned one is included. True when they were deleted.
@@ -69,17 +116,21 @@ struct HistoryView: View {
     }
 
     var body: some View {
-        if model.rows.isEmpty {
-            ContentUnavailableView("No clips yet", systemImage: "doc.on.clipboard",
-                                   description: Text("Things you copy will show up here."))
-        } else {
-            HSplitView {
-                listPane
-                    .frame(minWidth: 300, idealWidth: 360)
-                DetailPane(selection: selection, load: loadClip)
-                    .frame(minWidth: 280, idealWidth: 440)
+        Group {
+            if model.rows.isEmpty {
+                ContentUnavailableView("No clips yet", systemImage: "doc.on.clipboard",
+                                       description: Text("Things you copy will show up here."))
+            } else {
+                HSplitView {
+                    listPane
+                        .frame(minWidth: 300, idealWidth: 360)
+                    DetailPane(selection: selection, load: loadClip)
+                        .frame(minWidth: 280, idealWidth: 440)
+                }
             }
         }
+        .frame(minWidth: minimumSize.width, idealWidth: idealSize.width, maxWidth: .infinity,
+               minHeight: minimumSize.height, idealHeight: idealSize.height, maxHeight: .infinity)
     }
 
     private var listPane: some View {
