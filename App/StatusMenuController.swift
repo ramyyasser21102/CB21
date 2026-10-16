@@ -6,7 +6,7 @@ import CB21Core
 final class StatusMenuController: NSObject, NSMenuDelegate {
     private let service: CaptureService
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    private let menu = ClipMenu()
+    private let menu = NSMenu()
     private var openGate = MenuOpenGate()
     private let searchView = MenuSearchView()
     private var searchQuery = ""
@@ -22,7 +22,6 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         super.init()
         menu.delegate = self
         searchView.onQuickSelect = { [weak self] row in self?.quickSelect(row: row) ?? false }
-        menu.onQuickSelect = { [weak self] row in self?.quickSelect(row: row) ?? false }
         searchView.onChange = { [weak self] query in
             self?.searchQuery = query
             self?.rebuildClipItems()
@@ -76,29 +75,13 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         menu.items.filter { rowViews[ObjectIdentifier($0)] != nil }
     }
 
-    /// Items that carry a custom view are not reliably matched by the menu's own key handling while the search
-    /// field has focus, so ⌘1 to ⌘9 are also caught here and by the search row. Picking a row closes the menu first,
-    /// then copies, like a click.
+    /// ⌘1 to ⌘9, called by the search field's text editor (`QuickSelectFieldEditor`), which is where the key ends up
+    /// while the field has focus. Picking a row closes the menu first, then copies, like a click.
     private func quickSelect(row: Int) -> Bool {
         KeyLog.write("quickSelect row=\(row + 1) rowsListed=\(clipRowItems().count)")
         let items = clipRowItems()
         guard row < items.count, let view = rowViews[ObjectIdentifier(items[row])] else { return false }
         view.onPick?(false)
-        return true
-    }
-
-    /// Asked by the menu for every key it doesn't match itself.
-    func menuHasKeyEquivalent(
-        _ menu: NSMenu, for event: NSEvent,
-        target: AutoreleasingUnsafeMutablePointer<AnyObject?>!, action: UnsafeMutablePointer<Selector?>!
-    ) -> Bool {
-        if event.modifierFlags.contains(.command) { KeyLog.write("menuDelegate.menuHasKeyEquivalent \(KeyLog.describe(event))") }
-        guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
-              let key = event.charactersIgnoringModifiers, let row = QuickSelect.row(forKey: key) else { return false }
-        let items = clipRowItems()
-        guard row < items.count else { return false }
-        target.pointee = items[row].target
-        action.pointee = items[row].action
         return true
     }
 
@@ -291,20 +274,4 @@ private final class ClosureMenuItem: NSMenuItem {
     required init(coder: NSCoder) { fatalError("not used") }
 
     @objc private func run() { handler() }
-}
-
-
-/// A menu that catches ⌘1 to ⌘9 before anything else gets to claim them.
-final class ClipMenu: NSMenu {
-    var onQuickSelect: ((Int) -> Bool)?
-
-    override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        if event.modifierFlags.contains(.command) { KeyLog.write("ClipMenu.performKeyEquivalent \(KeyLog.describe(event))") }
-        if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
-           let key = event.charactersIgnoringModifiers, let row = QuickSelect.row(forKey: key),
-           onQuickSelect?(row) == true {
-            return true
-        }
-        return super.performKeyEquivalent(with: event)
-    }
 }
