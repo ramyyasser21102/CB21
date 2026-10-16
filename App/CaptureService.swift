@@ -11,6 +11,7 @@ final class CaptureService {
     /// The real pasteboard. Also used by the Welcome window to check and trigger clipboard access.
     let systemPasteboard = SystemPasteboard()
     let settings = SettingsModel()
+    private(set) lazy var folderAccess = FolderAccessModel(settings: settings)
     private let hotKeys = GlobalHotKeys()
     private var historyHotKeyID: UInt32?
     private var pauseHotKeyID: UInt32?
@@ -224,6 +225,7 @@ final class CaptureService {
 
     func start() {
         guard task == nil else { return }
+        folderAccess.quietCheckAtLaunch()
         let dir = Self.dataDirectory
         do {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

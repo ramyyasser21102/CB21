@@ -66,7 +66,8 @@ final class HistoryWindowController {
             delete: { service.confirmAndDelete(ids: $0) },
             setPinned: { service.setPinned($0, $1) },
             clearAll: { service.confirmAndClearAll() },
-            loadClip: { await service.clip(id: $0) }
+            loadClip: { await service.clip(id: $0) },
+            folderAccess: service.folderAccess
         )
     }
 
@@ -107,6 +108,7 @@ struct HistoryView: View {
     let setPinned: (UUID, Bool) -> Void
     let clearAll: () -> Void
     let loadClip: (UUID) async -> Clip?
+    let folderAccess: FolderAccessModel
     @State private var selection = Set<UUID>()
     @State private var query = ""
 
@@ -124,7 +126,7 @@ struct HistoryView: View {
                 HSplitView {
                     listPane
                         .frame(minWidth: 300, idealWidth: 360)
-                    DetailPane(selection: selection, load: loadClip)
+                    DetailPane(selection: selection, load: loadClip, folderAccess: folderAccess)
                         .frame(minWidth: 280, idealWidth: 440)
                 }
             }
