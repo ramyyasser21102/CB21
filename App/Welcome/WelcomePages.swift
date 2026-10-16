@@ -2,9 +2,9 @@ import AppKit
 import SwiftUI
 import CB21Core
 
-/// The cb21 glyph. It wipes in from the top while it fades and settles; with Reduce Motion it only fades.
+/// The app image. It fades in while growing slightly to full size; with Reduce Motion it only fades.
 struct WelcomeLogo: View {
-    @State private var reveal: CGFloat = 0
+    @State private var settled = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -12,14 +12,11 @@ struct WelcomeLogo: View {
             .resizable()
             .scaledToFit()
             .frame(height: 120)
-            .mask(alignment: .top) {
-                Rectangle().scaleEffect(y: reduceMotion ? 1 : reveal, anchor: .top)
-            }
-            .scaleEffect(reduceMotion ? 1 : 0.88 + 0.12 * reveal)
-            .opacity(Double(min(1, reveal * 1.6)))
+            .scaleEffect(reduceMotion || settled ? 1 : 0.92)
+            .opacity(settled ? 1 : 0)
             .accessibilityHidden(true)
             .onAppear {
-                withAnimation(.easeOut(duration: reduceMotion ? 0.25 : 1.1)) { reveal = 1 }
+                withAnimation(.easeOut(duration: reduceMotion ? 0.25 : 1.4)) { settled = true }
             }
     }
 }

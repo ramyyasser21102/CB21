@@ -113,6 +113,10 @@ Each step is one branch. **Manual** marks what only the user can verify.
 
 - [x] S7 `docs/license-gpl3`: GNU GPL v3 `LICENSE` (the canonical text from GitHub's license API), a README section with the copyright notice, ADR-0003, and the app's copyright string.
 
+- [x] S8 `feat/welcome-logo-image`: the Welcome window's first page shows the app image (the GitHub artwork) instead of the white SVG glyph, fading in while growing slightly (92% to 100% over 1.4 s, ease-out); Reduce Motion only fades.
+  - Verified automatically: builds and launches; the generated images look right (viewed).
+  - **Manual:** open the Welcome window: the rounded gray app image eases up into place, smoothly and only slightly, with no wipe.
+
 ## Phase 6 — Release
 
 - [x] 6.1 `feat/launch-at-login`: toggle in General, off by default. **Manual**
