@@ -163,7 +163,9 @@ Order: the saved flag and the page flow in Core (8.1–8.2), then the window (8.
 - [x] 8.5 `feat/welcome-login`: the launch-at-login page with the approval hint. **Manual**
   - Verified automatically: builds; the Login Items link identifier exists in the system's own Settings extensions. I did not toggle it, because that would add a login item to your Mac from a build folder.
   - **Manual:** Welcome page 3 shows a white switch "Open cb21 at login", off by default. Turn it on: it should appear under System Settings > General > Login Items, and Settings > General > Launch at login shows it on too. An unsigned build may show "macOS needs you to allow cb21 once in Login Items" with an "Open Login Items" button; allowing it there makes the message disappear within a second. Turning the switch off removes it.
-- [ ] 8.6 `feat/welcome-shortcuts`: the shortcuts page with the three recorders, styled for the dark window. **Manual**
+- [x] 8.6 `feat/welcome-shortcuts`: the shortcuts page with the three recorders, styled for the dark window. **Manual**
+  - Verified automatically: builds and launches; the recorders are the same component and the same tested validation as Settings (`ShortcutRecorder` now has a dark style for the Welcome window).
+  - **Manual:** Welcome page 4 lists "Open history", "Open menu bar list" and "Pause / resume capture" as white outline buttons on black. Click one and press e.g. Ctrl-Opt-V: it shows ⌃⌥V and works from any app straight away. A refused shortcut (Cmd-Space, no modifier, one another app owns, or one equal to another cb21 shortcut) shows a short message in grey with a warning sign. "Reset" clears it. While recording, the Return and arrow keys must not move the Welcome pages. Whatever you set here also shows in Settings > Shortcuts.
 - [ ] 8.7 `docs/readme-welcome`: README mentions the Welcome window.
 
 ## Hand-back note

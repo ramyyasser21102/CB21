@@ -5,6 +5,8 @@ import CB21Core
 /// Records a key combination. Escape cancels, and the result is checked before it is accepted.
 struct ShortcutRecorder: View {
     let title: String
+    /// White on black, for the Welcome window. Settings uses the system look.
+    var dark = false
     let shortcut: Shortcut?
     /// Returns an error message to show, or nil when the shortcut was accepted.
     let onChange: (Shortcut?) -> String?
@@ -15,23 +17,47 @@ struct ShortcutRecorder: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            LabeledContent(title) {
+            if dark {
                 HStack {
-                    Button(isRecording ? "Press shortcut…" : (shortcut?.label ?? "Not set")) {
-                        isRecording ? stop() : start()
-                    }
-                    if shortcut != nil {
-                        Button("Reset") {
-                            message = onChange(nil)
-                        }
-                    }
+                    Text(title).font(.system(size: 15)).foregroundStyle(.white)
+                    Spacer()
+                    controls
                 }
+            } else {
+                LabeledContent(title) { controls }
             }
             if let message {
-                Text(message).font(.caption).foregroundStyle(.red)
+                if dark {
+                    Label(message, systemImage: "exclamationmark.triangle")
+                        .font(.system(size: 12)).foregroundStyle(WelcomeStyle.secondary)
+                } else {
+                    Text(message).font(.caption).foregroundStyle(.red)
+                }
             }
         }
         .onDisappear { stop() }
+    }
+
+    private var controls: some View {
+        HStack {
+            if dark {
+                Button(isRecording ? "Press shortcut…" : (shortcut?.label ?? "Not set")) {
+                    isRecording ? stop() : start()
+                }
+                .buttonStyle(WelcomeOutlineButtonStyle())
+                if shortcut != nil {
+                    Button("Reset") { message = onChange(nil) }
+                        .buttonStyle(WelcomeQuietButtonStyle())
+                }
+            } else {
+                Button(isRecording ? "Press shortcut…" : (shortcut?.label ?? "Not set")) {
+                    isRecording ? stop() : start()
+                }
+                if shortcut != nil {
+                    Button("Reset") { message = onChange(nil) }
+                }
+            }
+        }
     }
 
     private func start() {
